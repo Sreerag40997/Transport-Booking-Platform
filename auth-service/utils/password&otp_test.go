@@ -23,7 +23,7 @@ func TestPasswordhHashingAndComparing(t *testing.T) {
 
 func TestOtp(t *testing.T) {
 	otp := GenerateOtp()
-	if len(otp) != 5 {
+	if len(otp) != 6 {
 		t.Fatalf("otp shouldnt be >or< 6")
 	}
 	if otp == "" {
