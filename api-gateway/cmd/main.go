@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/junaid9001/tripneo/api-gateway/config"
 	"github.com/junaid9001/tripneo/api-gateway/middleware"
 	"github.com/junaid9001/tripneo/api-gateway/redis"
@@ -17,6 +18,14 @@ func main() {
 
 	app := fiber.New()
 	app.Use(middleware.RequestID())
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{cfg.FRONTEND_URL},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowCredentials: true,
+	}))
+
 	app.Use(middleware.IpLimit(rdb))
 
 	routes.Register(app, cfg, rdb)
