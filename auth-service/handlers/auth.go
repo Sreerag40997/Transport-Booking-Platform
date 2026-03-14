@@ -182,7 +182,7 @@ func Login(cfg *config.Config) fiber.Handler {
 			Value:    token,
 			HTTPOnly: true,
 			Secure:   false, //true in prod
-			SameSite: "None",
+			SameSite: "Lax",
 			Path:     "/",
 			MaxAge:   60 * 60 * 24,
 		})
@@ -202,7 +202,7 @@ func Logout() fiber.Handler {
 			Value:    "",
 			HTTPOnly: true,
 			Secure:   false, //true in prod
-			SameSite: "None",
+			SameSite: "Lax",
 			Path:     "/",
 			MaxAge:   -1,
 		})
