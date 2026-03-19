@@ -27,6 +27,7 @@ services:
       - "REDIS_HOST=redis"  
       - "REDIS_PORT=6379"  
       - "AUTH_SERVICE_URL=http://auth-service:8081"
+      - "FLIGHT_SERVICE_URL=http://flight-service:8084"
     depends_on:
       - redis
 
@@ -46,5 +47,23 @@ services:
     
     depends_on:
       - redis
+
+  flight-service:
+    build:
+      context: ./flight-service
+      dockerfile: Dockerfile    
+    expose:
+      - 8084
+    env_file:
+      - ./flight-service/.env
+    environment:
+      DB_URL: ${flight_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+         
+
+    depends_on:
+     - redis  
 
     
