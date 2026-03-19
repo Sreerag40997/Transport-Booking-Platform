@@ -28,6 +28,7 @@ services:
       - "REDIS_PORT=6379"  
       - "AUTH_SERVICE_URL=http://auth-service:8081"
       - "TRAIN_SERVICE_URL=http://train-service:8082"
+      - "BUS_SERVICE_URL=http://bus-service:8083"
       - "FLIGHT_SERVICE_URL=http://flight-service:8084"
     depends_on:
       - redis
@@ -75,6 +76,22 @@ services:
       - ./train-service/.env
     environment:
       DB_URL: ${TRAIN_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    depends_on:
+     - redis  
+
+  bus-service:
+    build:
+      context: ./bus-service
+      dockerfile: Dockerfile
+    expose:
+      - 8083
+    env_file:
+      - ./bus-service/.env
+    environment:
+      DB_URL: ${BUS_DB}
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
