@@ -8,7 +8,6 @@ import (
 
 // Passenger is one traveller within a TrainBooking.
 // Adults and children get a berth (SeatID set).
-// Infants (under 5) sit on parent's lap — SeatID is nil.
 type Passenger struct {
 	ID             uuid.UUID       `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	BookingID      uuid.UUID       `gorm:"type:uuid;not null;index"`

@@ -21,7 +21,7 @@ type TrainBooking struct {
 	ServiceFee      float64       `gorm:"type:decimal(10,2);not null;default:0"`
 	TotalAmount     float64       `gorm:"type:decimal(10,2);not null"`
 	Currency        string        `gorm:"size:3;not null;default:'INR'"`
-	PaymentRef      string        `gorm:"size:100"` // Stripe payment intent ID
+	PaymentRef      string        `gorm:"size:100"` // Razorpay payment intent ID
 	BookedAt        time.Time     `gorm:"default:now()"`
 	ConfirmedAt     *time.Time    // pointer = nullable timestamp
 	CancelledAt     *time.Time
