@@ -10,8 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// SearchResult is what the search handler returns to the client.
-// It combines Train + Schedule + available seat count.
 type SearchResult struct {
 	ScheduleID     string    `json:"schedule_id"`
 	TrainNumber    string    `json:"train_number"`
@@ -28,9 +26,6 @@ type SearchResult struct {
 	Price          float64   `json:"price"`
 }
 
-// SearchTrains queries schedules + inventory for a route and date.
-// Only returns schedules that have available_seats > 0 for the requested class.
-// No waitlist — if a seat class is full, it is not returned.
 func SearchTrains(origin, destination, class string, date time.Time) ([]SearchResult, error) {
 	var results []SearchResult
 
@@ -126,8 +121,6 @@ func availabilityColumn(class string) string {
 	}
 }
 
-// DecrementAvailability reduces the available seat count for a class
-// on a schedule by n. Used after booking confirmation.
 func DecrementAvailability(tx *gorm.DB, scheduleID, class string, n int) error {
 	col := availabilityColumnRaw(class)
 	if col == "" {
@@ -139,8 +132,6 @@ func DecrementAvailability(tx *gorm.DB, scheduleID, class string, n int) error {
 	).Error
 }
 
-// IncrementAvailability restores the available seat count for a class.
-// Used on cancellation or expiry.
 func IncrementAvailability(tx *gorm.DB, scheduleID, class string, n int) error {
 	col := availabilityColumnRaw(class)
 	if col == "" {

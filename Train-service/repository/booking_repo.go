@@ -109,9 +109,6 @@ func CancelBooking(tx *gorm.DB, bookingID string) error {
 		}).Error
 }
 
-// GetExpiredPendingBookings returns all bookings that are
-// PENDING_PAYMENT and past their expires_at timestamp.
-// Called by the expiry background worker every 5 minutes.
 func GetExpiredPendingBookings() ([]models.TrainBooking, error) {
 	var bookings []models.TrainBooking
 	err := db.DB.
@@ -131,9 +128,6 @@ func CreateCancellation(tx *gorm.DB, c *models.Cancellation) error {
 	return nil
 }
 
-// GetActiveCancellationPolicy finds the best policy for a given
-// hours-before-departure value. Returns the policy with the highest
-// HoursBeforeDeparture that is <= hoursLeft.
 func GetActiveCancellationPolicy(hoursLeft int) (*models.CancellationPolicy, error) {
 	var policy models.CancellationPolicy
 	err := db.DB.

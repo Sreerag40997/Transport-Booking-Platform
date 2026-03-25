@@ -7,7 +7,6 @@ import (
 )
 
 // SearchTrains handles GET /api/train/search
-// Query params: from, to, class, date (YYYY-MM-DD)
 func SearchTrains(rdb *goredis.Client) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		origin := c.Query("from")
@@ -34,7 +33,6 @@ func SearchTrains(rdb *goredis.Client) fiber.Handler {
 }
 
 // GetTrainByID handles GET /api/train/:id
-// :id is a schedule UUID
 func GetTrainByID() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		scheduleID := c.Params("id")

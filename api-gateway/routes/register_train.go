@@ -12,4 +12,15 @@ func RegisterTrainRoutes(app *fiber.App, cfg *config.Config, rdb *redis.Client) 
 
 	api.Get("/health", proxy.To(cfg.TRAIN_SERVICE_URL))
 
+	// ------ Public ------
+	api.Get("/search", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Get("/:id/live-status", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Get("/:id/seats", proxy.To(cfg.TRAIN_SERVICE_URL))
+
+	//----- Protected -----
+	api.Post("/book", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Get("/bookings/:id", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Get("/bookings/user/history", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Post("/bookings/:id/cancel", proxy.To(cfg.TRAIN_SERVICE_URL))
+
 }
