@@ -8,8 +8,6 @@ import (
 	"github.com/nabeel-mp/tripneo/train-service/utils"
 )
 
-// GetTicket returns the e-ticket for a confirmed booking.
-// Verifies the requesting user owns the booking.
 func GetTicket(bookingID, userID string) (interface{}, error) {
 	// First verify booking ownership
 	booking, err := repository.GetBookingByID(bookingID)

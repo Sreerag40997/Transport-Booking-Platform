@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateBooking inserts a new TrainBooking record.
 func CreateBooking(tx *gorm.DB, booking *models.TrainBooking) error {
 	if err := tx.Create(booking).Error; err != nil {
 		return fmt.Errorf("create booking failed: %w", err)
@@ -18,7 +17,6 @@ func CreateBooking(tx *gorm.DB, booking *models.TrainBooking) error {
 	return nil
 }
 
-// CreateBookingSeats bulk-inserts the seat join records.
 func CreateBookingSeats(tx *gorm.DB, seats []models.BookingSeat) error {
 	if err := tx.Create(&seats).Error; err != nil {
 		return fmt.Errorf("create booking seats failed: %w", err)
@@ -26,7 +24,6 @@ func CreateBookingSeats(tx *gorm.DB, seats []models.BookingSeat) error {
 	return nil
 }
 
-// GetBookingByID fetches a booking with Schedule + Train preloaded.
 func GetBookingByID(bookingID string) (*models.TrainBooking, error) {
 	var booking models.TrainBooking
 	err := db.DB.
@@ -41,7 +38,6 @@ func GetBookingByID(bookingID string) (*models.TrainBooking, error) {
 	return &booking, nil
 }
 
-// GetBookingByPNR fetches a booking by PNR string.
 func GetBookingByPNR(pnr string) (*models.TrainBooking, error) {
 	var booking models.TrainBooking
 	err := db.DB.
@@ -56,7 +52,6 @@ func GetBookingByPNR(pnr string) (*models.TrainBooking, error) {
 	return &booking, nil
 }
 
-// GetBookingsByUserID returns booking history for a user, newest first.
 func GetBookingsByUserID(userID string) ([]models.TrainBooking, error) {
 	var bookings []models.TrainBooking
 	err := db.DB.
@@ -70,7 +65,6 @@ func GetBookingsByUserID(userID string) ([]models.TrainBooking, error) {
 	return bookings, nil
 }
 
-// UpdateBookingStatus updates the booking status field.
 func UpdateBookingStatus(tx *gorm.DB, bookingID, status string) error {
 	result := tx.Model(&models.TrainBooking{}).
 		Where("id = ?", bookingID).
@@ -84,7 +78,6 @@ func UpdateBookingStatus(tx *gorm.DB, bookingID, status string) error {
 	return nil
 }
 
-// ConfirmBooking sets status=CONFIRMED and confirmed_at timestamp.
 func ConfirmBooking(tx *gorm.DB, bookingID, paymentRef string) error {
 	now := time.Now()
 	return tx.Model(&models.TrainBooking{}).
@@ -97,7 +90,6 @@ func ConfirmBooking(tx *gorm.DB, bookingID, paymentRef string) error {
 		}).Error
 }
 
-// CancelBooking sets status=CANCELLED and cancelled_at timestamp.
 func CancelBooking(tx *gorm.DB, bookingID string) error {
 	now := time.Now()
 	return tx.Model(&models.TrainBooking{}).
@@ -120,7 +112,6 @@ func GetExpiredPendingBookings() ([]models.TrainBooking, error) {
 	return bookings, nil
 }
 
-// CreateCancellation inserts a Cancellation record.
 func CreateCancellation(tx *gorm.DB, c *models.Cancellation) error {
 	if err := tx.Create(c).Error; err != nil {
 		return fmt.Errorf("create cancellation failed: %w", err)
@@ -143,7 +134,6 @@ func GetActiveCancellationPolicy(hoursLeft int) (*models.CancellationPolicy, err
 	return &policy, nil
 }
 
-// CreateTicket inserts a TrainTicket record after QR generation.
 func CreateTicket(tx *gorm.DB, ticket *models.TrainTicket) error {
 	if err := tx.Create(ticket).Error; err != nil {
 		return fmt.Errorf("create ticket failed: %w", err)
@@ -151,7 +141,6 @@ func CreateTicket(tx *gorm.DB, ticket *models.TrainTicket) error {
 	return nil
 }
 
-// GetTicketByBookingID fetches the ticket for a confirmed booking.
 func GetTicketByBookingID(bookingID string) (*models.TrainTicket, error) {
 	var ticket models.TrainTicket
 	err := db.DB.

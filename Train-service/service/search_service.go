@@ -13,9 +13,6 @@ import (
 
 const searchCacheTTL = 2 * time.Minute
 
-// SearchTrains checks Redis cache first, then hits the DB.
-// Cache key is built from origin + destination + class + date.
-// Only trains with available_seats > 0 are returned (no waitlist).
 func SearchTrains(
 	ctx context.Context,
 	rdb *goredis.Client,
@@ -64,8 +61,6 @@ func GetScheduleDetail(scheduleID string) (interface{}, error) {
 	return schedule, nil
 }
 
-// GetSeatMap returns the berth map for a schedule and class.
-// Also checks Redis for per-seat lock status and marks locked seats.
 func GetSeatMap(
 	ctx context.Context,
 	rdb *goredis.Client,

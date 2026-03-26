@@ -22,7 +22,6 @@ func Register(app *fiber.App, cfg *config.Config, rdb *goredis.Client) {
 
 	// --- Public routes ---
 	train.Get("/search", handlers.SearchTrains(rdb))
-	train.Post("/tickets/verify", handlers.VerifyTicket())
 
 	// --- Protected routes ---
 	train.Post("/book", middleware.ExtractUser(), handlers.BookTrain(rdb))
@@ -30,6 +29,7 @@ func Register(app *fiber.App, cfg *config.Config, rdb *goredis.Client) {
 	train.Get("/bookings/:id", middleware.ExtractUser(), handlers.GetBooking(rdb))
 	train.Post("/bookings/:id/cancel", middleware.ExtractUser(), handlers.CancelBooking(rdb))
 	train.Get("/tickets/:booking_id", middleware.ExtractUser(), handlers.GetTicket())
+	train.Post("/tickets/verify", middleware.ExtractUser(), handlers.VerifyTicket())
 
 	// --- Dynamic :id routes (must come LAST to avoid Fiber param conflicts) ---
 	train.Get("/:id/live-status", handlers.GetLiveStatus(rdb))

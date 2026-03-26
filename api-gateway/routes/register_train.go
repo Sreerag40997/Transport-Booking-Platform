@@ -14,6 +14,7 @@ func RegisterTrainRoutes(app *fiber.App, cfg *config.Config, rdb *redis.Client) 
 
 	// ------ Public ------
 	api.Get("/search", proxy.To(cfg.TRAIN_SERVICE_URL))
+	api.Get("/:id", proxy.To(cfg.TRAIN_SERVICE_URL))
 	api.Get("/:id/live-status", proxy.To(cfg.TRAIN_SERVICE_URL))
 	api.Get("/:id/seats", proxy.To(cfg.TRAIN_SERVICE_URL))
 
