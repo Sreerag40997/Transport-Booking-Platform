@@ -5,39 +5,28 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nabeel-mp/tripneo/train-service/db"
-	"github.com/nabeel-mp/tripneo/train-service/models"
 	"github.com/nabeel-mp/tripneo/train-service/repository"
 	goredis "github.com/redis/go-redis/v9"
 )
 
 const searchCacheTTL = 2 * time.Minute
 
-func SearchTrains(ctx context.Context, rdb *goredis.Client, fromCode, toCode, date, class string) ([]models.TrainSchedule, error) {
-	var results []models.TrainSchedule
-
-	// Use the 'class' parameter in your query if needed
-	query := db.DB.WithContext(ctx).Table("train_schedules").
-		Select("train_schedules.*").
-		Joins("JOIN trains ON trains.id = train_schedules.train_id").
-		Joins("JOIN train_stops AS s1 ON s1.train_id = trains.id").
-		Joins("JOIN stations AS st1 ON st1.id = s1.station_id").
-		Joins("JOIN train_stops AS s2 ON s2.train_id = trains.id").
-		Joins("JOIN stations AS st2 ON st2.id = s2.station_id").
-		Where("st1.code = ? AND st2.code = ?", fromCode, toCode).
-		Where("s1.stop_sequence < s2.stop_sequence").
-		Where("DATE(train_schedules.schedule_date) = ?", date)
-
-	// Optional: Filter by class if provided
-	if class != "" {
-		// Assuming your model/DB has a way to filter by class
-		query = query.Where("class = ?", class)
+func SearchTrains(ctx context.Context, rdb *goredis.Client, fromCode, toCode, dateStr, class string) ([]repository.SearchResult, error) {
+	// Parse the incoming date string (e.g., "2026-03-28") into a time.Time object
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format, expected YYYY-MM-DD: %w", err)
 	}
 
-	err := query.Preload("Train.Stops.Station").Find(&results).Error
+	// Default to "SL" if no class is provided so the repository query doesn't fail
+	if class == "" {
+		class = "SL"
+	}
 
+	// Call the repository function
+	results, err := repository.SearchTrains(fromCode, toCode, class, parsedDate)
 	if err != nil {
-		return nil, fmt.Errorf("search failed: %w", err)
+		return nil, fmt.Errorf("failed to search trains: %w", err)
 	}
 
 	return results, nil

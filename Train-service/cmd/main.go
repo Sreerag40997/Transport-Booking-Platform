@@ -22,8 +22,6 @@ func main() {
 
 	seed.SeedAll(db.DB)
 
-	// go service.RunInstanceGeneratorWorker()
-
 	c := cron.New()
 	c.AddFunc("0 2 * * *", func() {
 		jobs.GenerateUpcomingInventory(db.DB, 30) // Runs every day at 2 AM
