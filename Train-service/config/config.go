@@ -20,6 +20,9 @@ type Config struct {
 	PAYMENT_SERVICE_GRPC string
 
 	KAFKA_BROKER string
+
+	RAPIDAPI_KEY  string
+	RAPIDAPI_HOST string
 }
 
 func LoadConfig() *Config {
@@ -39,5 +42,8 @@ func LoadConfig() *Config {
 		PAYMENT_SERVICE_GRPC: os.Getenv("PAYMENT_SERVICE_GRPC"),
 
 		KAFKA_BROKER: os.Getenv("KAFKA_BROKER"),
+
+		RAPIDAPI_KEY:  os.Getenv("RAPIDAPI_KEY"),
+		RAPIDAPI_HOST: os.Getenv("RAPIDAPI_HOST"),
 	}
 }

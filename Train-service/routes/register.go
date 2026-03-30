@@ -34,4 +34,5 @@ func Register(app *fiber.App, cfg *config.Config, rdb *goredis.Client) {
 	train.Get("/:id/live-status", handlers.GetLiveStatus(rdb))
 	train.Get("/:id/seats", handlers.GetSeatMap(rdb))
 	train.Get("/:id", handlers.GetTrainByID())
+
 }

@@ -20,7 +20,9 @@ func main() {
 
 	rdb := redis.Client(cfg.REDIS_HOST, cfg.REDIS_PORT)
 
-	seed.SeedAll(db.DB)
+	if err := seed.SeedAll(db.DB, cfg); err != nil {
+		log.Printf("Warning: Failed to seed the database: %v", err)
+	}
 
 	c := cron.New()
 	c.AddFunc("0 2 * * *", func() {
