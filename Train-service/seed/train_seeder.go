@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/nabeel-mp/tripneo/train-service/config"
@@ -116,19 +117,21 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 	for _, trainNo := range trainNumbersToSeed {
 		log.Printf("Fetching details for train %s from API...", trainNo)
 
-		apiData, err := utils.FetchTrainDetails(trainNo, cfg.RAPIDAPI_KEY, cfg.RAPIDAPI_HOST)
+		apiData, err := utils.FetchTrainDetails(trainNo, cfg.RAPID_API_KEY, cfg.RAPID_API_HOST)
 		if err != nil {
 			log.Printf("Error fetching train %s: %v", trainNo, err)
+
+			// 2. Add a pause even if there's an error, before trying the next train
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		// Ensure we have route data
 		if len(apiData.Data.Route) == 0 {
 			log.Printf("Warning: Train %s returned empty route, skipping", trainNo)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		// Extract info from the nested 'Data' object
 		firstStop := apiData.Data.Route[0]
 		lastStop := apiData.Data.Route[len(apiData.Data.Route)-1]
 
@@ -137,10 +140,8 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 		destination := lastStop.StationCode
 		arrTime := lastStop.ArrivalTime
 
-		// The API gives us Distance as a string (e.g., "0", "1250"), so we must convert it to an int
 		totalDuration, _ := strconv.Atoi(lastStop.Distance)
 
-		// 1. Create or Update the Train
 		train := models.Train{
 			TrainNumber:        apiData.Data.TrainNo,
 			TrainName:          apiData.Data.TrainName,
@@ -149,7 +150,7 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 			DepartureTime:      depTime,
 			ArrivalTime:        arrTime,
 			DurationMinutes:    totalDuration,
-			DaysOfWeek:         pq.Int32Array{1, 2, 3, 4, 5, 6, 7}, // Simplification for now
+			DaysOfWeek:         pq.Int32Array{1, 2, 3, 4, 5, 6, 7},
 			IsActive:           true,
 		}
 
@@ -159,7 +160,6 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 			return err
 		}
 
-		// 2. Iterate through the route and save the Stations and Train Stops
 		for _, stop := range apiData.Data.Route {
 			station := models.Station{
 				Code: stop.StationCode,
@@ -167,7 +167,6 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 			}
 			tx.Where("code = ?", station.Code).FirstOrCreate(&station)
 
-			// Convert string distance to int
 			dist, _ := strconv.Atoi(stop.Distance)
 
 			trainStop := models.TrainStop{
@@ -186,6 +185,9 @@ func SeedTrainsFromAPI(tx *gorm.DB, cfg *config.Config) error {
 		}
 
 		log.Printf("Successfully seeded train %s", trainNo)
+
+		// 3. Add a 2-second pause before fetching the next train
+		time.Sleep(2 * time.Second)
 	}
 	return nil
 }

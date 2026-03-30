@@ -21,8 +21,8 @@ type Config struct {
 
 	KAFKA_BROKER string
 
-	RAPIDAPI_KEY  string
-	RAPIDAPI_HOST string
+	RAPID_API_KEY  string
+	RAPID_API_HOST string
 }
 
 func LoadConfig() *Config {
@@ -43,7 +43,7 @@ func LoadConfig() *Config {
 
 		KAFKA_BROKER: os.Getenv("KAFKA_BROKER"),
 
-		RAPIDAPI_KEY:  os.Getenv("RAPIDAPI_KEY"),
-		RAPIDAPI_HOST: os.Getenv("RAPIDAPI_HOST"),
+		RAPID_API_KEY:  os.Getenv("RAPID_API_KEY"),
+		RAPID_API_HOST: os.Getenv("RAPID_API_HOST"),
 	}
 }

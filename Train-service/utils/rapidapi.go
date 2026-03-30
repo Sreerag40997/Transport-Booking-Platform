@@ -13,11 +13,11 @@ type IRCTCTrainResponse struct {
 	Status  bool   `json:"status"`
 	Message string `json:"message"`
 	Data    struct {
-		TrainNo            string   `json:"trainNo"`
-		TrainName          string   `json:"trainName"`
-		SourceStation      string   `json:"sourceStation"`
-		DestinationStation string   `json:"destinationStation"`
-		RunDays            []string `json:"runDays"`
+		TrainNo            string                 `json:"trainNo"`
+		TrainName          string                 `json:"trainName"`
+		SourceStation      string                 `json:"sourceStation"`
+		DestinationStation string                 `json:"destinationStation"`
+		RunDays            map[string]interface{} `json:"runDays"`
 		Route              []struct {
 			StationCode     string `json:"stationCode"`
 			StationName     string `json:"stationName"`

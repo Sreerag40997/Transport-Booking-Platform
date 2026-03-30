@@ -34,11 +34,11 @@ type IRCTCStationStop struct {
 
 func FetchTrainDataFromAPI(trainNumber string, cfg *config.Config) (*IRCTCTrainScheduleResponse, error) {
 	// Example URL - replace with your specific RapidAPI endpoint
-	url := fmt.Sprintf("https://%s/v1/trains/schedule?train_number=%s", cfg.RAPIDAPI_HOST, trainNumber)
+	url := fmt.Sprintf("https://%s/v1/trains/schedule?train_number=%s", cfg.RAPID_API_HOST, trainNumber)
 
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("x-rapidapi-key", cfg.RAPIDAPI_KEY)
-	req.Header.Add("x-rapidapi-host", cfg.RAPIDAPI_HOST)
+	req.Header.Add("x-rapidapi-key", cfg.RAPID_API_KEY)
+	req.Header.Add("x-rapidapi-host", cfg.RAPID_API_HOST)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
