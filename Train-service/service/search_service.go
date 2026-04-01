@@ -9,8 +9,6 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-const searchCacheTTL = 2 * time.Minute
-
 func SearchTrains(ctx context.Context, rdb *goredis.Client, fromCode, toCode, dateStr, class string) ([]repository.SearchResult, error) {
 	parsedDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
