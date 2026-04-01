@@ -8,12 +8,36 @@
     "longitude": 77.5713
   },
   {
+    "name": "Sreeram Nagar",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "country": "India",
+    "latitude": 12.9715,
+    "longitude": 77.5946
+  },
+  {
+    "name": "Electronic City",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "country": "India",
+    "latitude": 12.8441,
+    "longitude": 77.6622
+  },
+  {
     "name": "MG Bus Station",
     "city": "Hyderabad",
     "state": "Telangana",
     "country": "India",
     "latitude": 17.3787,
     "longitude": 78.4831
+  },
+  {
+    "name": "Secunderabad Station",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "country": "India",
+    "latitude": 17.4336,
+    "longitude": 78.5009
   },
   {
     "name": "Koyambedu Bus Terminus",
@@ -24,11 +48,19 @@
     "longitude": 80.1948
   },
   {
-    "name": "Secunderabad Station",
-    "city": "Hyderabad",
-    "state": "Telangana",
+    "name": "Chennai Central",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
     "country": "India",
-    "latitude": 17.4336,
-    "longitude": 78.5009
+    "latitude": 13.0827,
+    "longitude": 80.2707
+  },
+  {
+    "name": "Pune Bus Station",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "country": "India",
+    "latitude": 18.5204,
+    "longitude": 73.8567
   }
 ]

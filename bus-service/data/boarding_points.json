@@ -3,18 +3,64 @@
     "bus_number": "KA-01-F-1234",
     "travel_date": "2026-04-15",
     "stop_name": "Majestic Bus Stop",
-    "city": "Bangalore",
     "pickup_time": "2026-04-15T21:30:00Z",
     "sequence_order": 1,
-    "landmark": "Near Anand Rao Circle"
+    "landmark": "Near Anand Rao Circle, KSRTC Main Depot"
+  },
+  {
+    "bus_number": "KA-01-F-1234",
+    "travel_date": "2026-04-15",
+    "stop_name": "Sreeram Nagar",
+    "pickup_time": "2026-04-15T21:45:00Z",
+    "sequence_order": 2,
+    "landmark": "Opposite Big Bazaar, Sreeram Nagar Signal"
   },
   {
     "bus_number": "MH-12-PQ-9090",
     "travel_date": "2026-04-15",
     "stop_name": "Majestic Bus Stop",
-    "city": "Bangalore",
     "pickup_time": "2026-04-15T22:00:00Z",
     "sequence_order": 1,
-    "landmark": "KSRTC Depot"
+    "landmark": "KSRTC Platform 3"
+  },
+  {
+    "bus_number": "MH-12-PQ-9090",
+    "travel_date": "2026-04-15",
+    "stop_name": "Electronic City",
+    "pickup_time": "2026-04-15T22:45:00Z",
+    "sequence_order": 2,
+    "landmark": "Infosys Gate 2, Electronic City Phase 1"
+  },
+  {
+    "bus_number": "TS-09-RT-4567",
+    "travel_date": "2026-04-15",
+    "stop_name": "MG Bus Station",
+    "pickup_time": "2026-04-15T08:00:00Z",
+    "sequence_order": 1,
+    "landmark": "MG Bus Station Main Entrance"
+  },
+  {
+    "bus_number": "TS-09-RT-4567",
+    "travel_date": "2026-04-15",
+    "stop_name": "Secunderabad Station",
+    "pickup_time": "2026-04-15T08:30:00Z",
+    "sequence_order": 2,
+    "landmark": "Secunderabad Clock Tower Stop"
+  },
+  {
+    "bus_number": "KA-01-F-1234",
+    "travel_date": "2026-04-16",
+    "stop_name": "Majestic Bus Stop",
+    "pickup_time": "2026-04-16T21:30:00Z",
+    "sequence_order": 1,
+    "landmark": "Near Anand Rao Circle, KSRTC Main Depot"
+  },
+  {
+    "bus_number": "KA-01-F-1234",
+    "travel_date": "2026-04-16",
+    "stop_name": "Sreeram Nagar",
+    "pickup_time": "2026-04-16T21:45:00Z",
+    "sequence_order": 2,
+    "landmark": "Opposite Big Bazaar, Sreeram Nagar Signal"
   }
 ]

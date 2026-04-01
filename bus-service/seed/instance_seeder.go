@@ -15,17 +15,21 @@ func SeedBusInstances(tx *gorm.DB) error {
 		return err
 	}
 	var raw []struct {
-		BusNumber           string    `json:"bus_number"`
-		TravelDate          string    `json:"travel_date"`
-		DepartureAt         time.Time `json:"departure_at"`
-		ArrivalAt           time.Time `json:"arrival_at"`
-		Status              string    `json:"status"`
-		BasePriceSeater         float64 `json:"base_price_seater"`
-		BasePriceSemiSleeper    float64 `json:"base_price_semi_sleeper"`
-		BasePriceSleeper        float64 `json:"base_price_sleeper"`
-		CurrentPriceSeater      float64 `json:"current_price_seater"`
-		CurrentPriceSemiSleeper float64 `json:"current_price_semi_sleeper"`
-		CurrentPriceSleeper     float64 `json:"current_price_sleeper"`
+		BusNumber               string    `json:"bus_number"`
+		TravelDate              string    `json:"travel_date"`
+		DepartureAt             time.Time `json:"departure_at"`
+		ArrivalAt               time.Time `json:"arrival_at"`
+		Status                  string    `json:"status"`
+		DelayMinutes            int       `json:"delay_minutes"`
+		AvailableSeater         int       `json:"available_seater"`
+		AvailableSemiSleeper    int       `json:"available_semi_sleeper"`
+		AvailableSleeper        int       `json:"available_sleeper"`
+		BasePriceSeater         float64   `json:"base_price_seater"`
+		BasePriceSemiSleeper    float64   `json:"base_price_semi_sleeper"`
+		BasePriceSleeper        float64   `json:"base_price_sleeper"`
+		CurrentPriceSeater      float64   `json:"current_price_seater"`
+		CurrentPriceSemiSleeper float64   `json:"current_price_semi_sleeper"`
+		CurrentPriceSleeper     float64   `json:"current_price_sleeper"`
 	}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
 		return err
@@ -38,19 +42,23 @@ func SeedBusInstances(tx *gorm.DB) error {
 			continue
 		}
 		tDate, _ := time.Parse("2006-01-02", r.TravelDate)
-		
+
 		inst := model.BusInstance{
-			BusID: templateBus.ID,
-			TravelDate: tDate,
-			DepartureAt: r.DepartureAt,
-			ArrivalAt: r.ArrivalAt,
-			Status: r.Status,
-			BasePriceSeater: r.BasePriceSeater,
-			BasePriceSemiSleeper: r.BasePriceSemiSleeper,
-			BasePriceSleeper: r.BasePriceSleeper,
-			CurrentPriceSeater: r.CurrentPriceSeater,
+			BusID:                   templateBus.ID,
+			TravelDate:              tDate,
+			DepartureAt:             r.DepartureAt,
+			ArrivalAt:               r.ArrivalAt,
+			Status:                  r.Status,
+			DelayMinutes:            r.DelayMinutes,
+			AvailableSeater:         r.AvailableSeater,
+			AvailableSemiSleeper:    r.AvailableSemiSleeper,
+			AvailableSleeper:        r.AvailableSleeper,
+			BasePriceSeater:         r.BasePriceSeater,
+			BasePriceSemiSleeper:    r.BasePriceSemiSleeper,
+			BasePriceSleeper:        r.BasePriceSleeper,
+			CurrentPriceSeater:      r.CurrentPriceSeater,
 			CurrentPriceSemiSleeper: r.CurrentPriceSemiSleeper,
-			CurrentPriceSleeper: r.CurrentPriceSleeper,
+			CurrentPriceSleeper:     r.CurrentPriceSleeper,
 		}
 
 		var existing model.BusInstance
@@ -74,12 +82,13 @@ func SeedBoardingPoints(tx *gorm.DB) error {
 		return err
 	}
 	var raw []struct {
-		BusNumber string `json:"bus_number"`
-		TravelDate string `json:"travel_date"`
-		StopName string `json:"stop_name"`
-		PickupTime time.Time `json:"pickup_time"`
-		SequenceOrder int `json:"sequence_order"`
-		Landmark string `json:"landmark"`
+		BusNumber     string    `json:"bus_number"`
+		TravelDate    string    `json:"travel_date"`
+		StopName      string    `json:"stop_name"`
+		City          string    `json:"city"`
+		PickupTime    time.Time `json:"pickup_time"`
+		SequenceOrder int       `json:"sequence_order"`
+		Landmark      string    `json:"landmark"`
 	}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
 		return err
@@ -96,16 +105,22 @@ func SeedBoardingPoints(tx *gorm.DB) error {
 			continue
 		}
 		var stop model.BusStop
-		if err := tx.Where("name = ?", r.StopName).First(&stop).Error; err != nil {
-			continue
+		if r.City != "" {
+			if err := tx.Where("name = ? AND city = ?", r.StopName, r.City).First(&stop).Error; err != nil {
+				continue
+			}
+		} else {
+			if err := tx.Where("name = ?", r.StopName).First(&stop).Error; err != nil {
+				continue
+			}
 		}
 
 		bp := model.BoardingPoint{
 			BusInstanceID: inst.ID,
-			BusStopID: stop.ID,
-			PickupTime: r.PickupTime,
+			BusStopID:     stop.ID,
+			PickupTime:    r.PickupTime,
 			SequenceOrder: r.SequenceOrder,
-			Landmark: r.Landmark,
+			Landmark:      r.Landmark,
 		}
 		tx.Where("bus_instance_id = ? AND bus_stop_id = ?", inst.ID, stop.ID).FirstOrCreate(&bp)
 	}
@@ -118,12 +133,13 @@ func SeedDroppingPoints(tx *gorm.DB) error {
 		return err
 	}
 	var raw []struct {
-		BusNumber string `json:"bus_number"`
-		TravelDate string `json:"travel_date"`
-		StopName string `json:"stop_name"`
-		DropTime time.Time `json:"drop_time"`
-		SequenceOrder int `json:"sequence_order"`
-		Landmark string `json:"landmark"`
+		BusNumber     string    `json:"bus_number"`
+		TravelDate    string    `json:"travel_date"`
+		StopName      string    `json:"stop_name"`
+		City          string    `json:"city"`
+		DropTime      time.Time `json:"drop_time"`
+		SequenceOrder int       `json:"sequence_order"`
+		Landmark      string    `json:"landmark"`
 	}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
 		return err
@@ -140,16 +156,22 @@ func SeedDroppingPoints(tx *gorm.DB) error {
 			continue
 		}
 		var stop model.BusStop
-		if err := tx.Where("name = ?", r.StopName).First(&stop).Error; err != nil {
-			continue
+		if r.City != "" {
+			if err := tx.Where("name = ? AND city = ?", r.StopName, r.City).First(&stop).Error; err != nil {
+				continue
+			}
+		} else {
+			if err := tx.Where("name = ?", r.StopName).First(&stop).Error; err != nil {
+				continue
+			}
 		}
 
 		dp := model.DroppingPoint{
 			BusInstanceID: inst.ID,
-			BusStopID: stop.ID,
-			DropTime: r.DropTime,
+			BusStopID:     stop.ID,
+			DropTime:      r.DropTime,
 			SequenceOrder: r.SequenceOrder,
-			Landmark: r.Landmark,
+			Landmark:      r.Landmark,
 		}
 		tx.Where("bus_instance_id = ? AND bus_stop_id = ?", inst.ID, stop.ID).FirstOrCreate(&dp)
 	}

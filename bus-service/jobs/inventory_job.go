@@ -62,11 +62,8 @@ func contains(arr []int, val int) bool {
 }
 
 func generateForDate(db *gorm.DB, bus model.Bus, targetDate time.Time) bool {
-	tDepart, _ := time.Parse("15:04", bus.DepartureTime)
-	tArrival, _ := time.Parse("15:04", bus.ArrivalTime)
-
-	departureAt := combineDateAndTime(targetDate, tDepart)
-	arrivalAt := combineDateAndTime(targetDate, tArrival)
+	departureAt := combineDateAndTime(targetDate, bus.DepartureTime)
+	arrivalAt := combineDateAndTime(targetDate, bus.ArrivalTime)
 
 	// Normalize if trip traverses past midnight
 	if arrivalAt.Before(departureAt) {
@@ -79,6 +76,9 @@ func generateForDate(db *gorm.DB, bus model.Bus, targetDate time.Time) bool {
 		DepartureAt:             departureAt,
 		ArrivalAt:               arrivalAt,
 		Status:                  "SCHEDULED",
+		AvailableSeater:         30,
+		AvailableSemiSleeper:    20,
+		AvailableSleeper:        10,
 		BasePriceSeater:         500.0,
 		BasePriceSemiSleeper:    900.0,
 		BasePriceSleeper:        1200.0,
@@ -97,13 +97,16 @@ func generateForDate(db *gorm.DB, bus model.Bus, targetDate time.Time) bool {
 		return false // Conflicted / already exists
 	}
 
-	// Unroll default Fare Types identically mirroring flight-service classes
+	// Create default fare types covering all seat categories
 	fares := []model.FareType{
-		{BusInstanceID: instance.ID, SeatType: "sleeper", Name: "GENERAL", Price: instance.BasePriceSleeper, IsRefundable: false, CancellationFee: instance.BasePriceSleeper},
-		{BusInstanceID: instance.ID, SeatType: "sleeper", Name: "FLEXI", Price: instance.BasePriceSleeper + 300, IsRefundable: true, CancellationFee: 300},
-		{BusInstanceID: instance.ID, SeatType: "semi_sleeper", Name: "GENERAL", Price: instance.BasePriceSemiSleeper, IsRefundable: false},
+		{BusInstanceID: instance.ID, SeatType: "sleeper", Name: "GENERAL", Price: instance.BasePriceSleeper, IsRefundable: false, CancellationFee: instance.BasePriceSleeper, SeatsAvailable: instance.AvailableSleeper},
+		{BusInstanceID: instance.ID, SeatType: "sleeper", Name: "FLEXI", Price: instance.BasePriceSleeper + 300, IsRefundable: true, CancellationFee: 300, SeatsAvailable: instance.AvailableSleeper},
+		{BusInstanceID: instance.ID, SeatType: "semi_sleeper", Name: "GENERAL", Price: instance.BasePriceSemiSleeper, IsRefundable: false, CancellationFee: instance.BasePriceSemiSleeper, SeatsAvailable: instance.AvailableSemiSleeper},
+		{BusInstanceID: instance.ID, SeatType: "seater", Name: "GENERAL", Price: instance.BasePriceSeater, IsRefundable: false, CancellationFee: instance.BasePriceSeater, SeatsAvailable: instance.AvailableSeater},
 	}
-	db.Create(&fares)
+	if fareErr := db.Create(&fares).Error; fareErr != nil {
+		log.Println("[CRON] Failed to create fares for instance:", instance.ID, fareErr)
+	}
 
 	// Intercept BusType Layout logic identically rolling out the concrete Seat grid
 	if len(bus.BusType.SeatLayout) > 0 {
@@ -113,6 +116,10 @@ func generateForDate(db *gorm.DB, bus model.Bus, targetDate time.Time) bool {
 	return true
 }
 
-func combineDateAndTime(d time.Time, t time.Time) time.Time {
+func combineDateAndTime(d time.Time, timeStr string) time.Time {
+	t, err := time.ParseInLocation("15:04", timeStr, d.Location())
+	if err != nil {
+		return d // fallback: use the date as-is on parse failure
+	}
 	return time.Date(d.Year(), d.Month(), d.Day(), t.Hour(), t.Minute(), 0, 0, d.Location())
 }

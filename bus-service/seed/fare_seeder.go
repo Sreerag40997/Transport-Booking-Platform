@@ -15,14 +15,15 @@ func SeedFareTypes(tx *gorm.DB) error {
 		return err
 	}
 	var raw []struct {
-		BusNumber string `json:"bus_number"`
-		TravelDate string `json:"travel_date"`
-		Name string `json:"name"`
-		SeatType string `json:"seat_type"`
-		Price float64 `json:"price"`
-		IsRefundable bool `json:"is_refundable"`
+		BusNumber       string  `json:"bus_number"`
+		TravelDate      string  `json:"travel_date"`
+		Name            string  `json:"name"`
+		SeatType        string  `json:"seat_type"`
+		Price           float64 `json:"price"`
+		IsRefundable    bool    `json:"is_refundable"`
 		CancellationFee float64 `json:"cancellation_fee"`
-		DateChangeFee float64 `json:"date_change_fee"`
+		DateChangeFee   float64 `json:"date_change_fee"`
+		SeatsAvailable  int     `json:"seats_available"`
 	}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
 		return err
@@ -40,14 +41,14 @@ func SeedFareTypes(tx *gorm.DB) error {
 		}
 
 		ft := model.FareType{
-			BusInstanceID: inst.ID,
-			SeatType: r.SeatType,
-			Name: r.Name,
-			Price: r.Price,
-			IsRefundable: r.IsRefundable,
+			BusInstanceID:   inst.ID,
+			SeatType:        r.SeatType,
+			Name:            r.Name,
+			Price:           r.Price,
+			IsRefundable:    r.IsRefundable,
 			CancellationFee: r.CancellationFee,
-			DateChangeFee: r.DateChangeFee,
-			SeatsAvailable: 0, // Should realistically bind dynamically based on available, defaults to 0 as proxy in prototype 
+			DateChangeFee:   r.DateChangeFee,
+			SeatsAvailable:  r.SeatsAvailable,
 		}
 		tx.Where("bus_instance_id = ? AND name = ? AND seat_type = ?", inst.ID, r.Name, r.SeatType).FirstOrCreate(&ft)
 	}

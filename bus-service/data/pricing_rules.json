@@ -2,7 +2,7 @@
   {
     "name": "Demand High",
     "rule_type": "DEMAND",
-    "conditions": {"fill_rate_above": 0.85},
+    "conditions": { "fill_rate_above": 0.85 },
     "multiplier": 1.25,
     "priority": 10,
     "is_active": true
@@ -10,23 +10,23 @@
   {
     "name": "Demand Medium",
     "rule_type": "DEMAND",
-    "conditions": {"fill_rate_above": 0.60},
+    "conditions": { "fill_rate_above": 0.60 },
     "multiplier": 1.10,
     "priority": 20,
     "is_active": true
   },
   {
-    "name": "Early Bird",
+    "name": "Early Bird Discount",
     "rule_type": "TIME_TO_DEPARTURE",
-    "conditions": {"hours_before_departure_above": 336},
+    "conditions": { "hours_before_departure_above": 336 },
     "multiplier": 0.90,
     "priority": 30,
     "is_active": true
   },
   {
-    "name": "Last Minute",
+    "name": "Last Minute Surge",
     "rule_type": "TIME_TO_DEPARTURE",
-    "conditions": {"hours_before_departure_below": 12},
+    "conditions": { "hours_before_departure_below": 12 },
     "multiplier": 1.20,
     "priority": 40,
     "is_active": true
@@ -34,7 +34,7 @@
   {
     "name": "Weekend Travel",
     "rule_type": "WEEKEND",
-    "conditions": {"days": [5, 7]},
+    "conditions": { "days": [5, 7] },
     "multiplier": 1.08,
     "priority": 50,
     "is_active": true
