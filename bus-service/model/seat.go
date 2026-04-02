@@ -18,7 +18,7 @@ type FareType struct {
 	SeatsAvailable  int       `gorm:"not null" json:"seats_available"`
 	CreatedAt       time.Time `gorm:"default:now()" json:"created_at"`
 
-	BusInstance BusInstance `gorm:"foreignKey:BusInstanceID" json:"bus_instance"`
+	BusInstance *BusInstance `gorm:"foreignKey:BusInstanceID" json:"bus_instance,omitempty"`
 }
 
 type Seat struct {
@@ -31,5 +31,5 @@ type Seat struct {
 	ExtraCharge   float64   `gorm:"type:decimal(10,2);default:0" json:"extra_charge"`
 	IsAvailable   bool      `gorm:"default:true" json:"is_available"`
 
-	BusInstance BusInstance `gorm:"foreignKey:BusInstanceID" json:"bus_instance"`
+	BusInstance *BusInstance `gorm:"foreignKey:BusInstanceID" json:"bus_instance,omitempty"`
 }

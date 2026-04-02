@@ -7,7 +7,8 @@
     "price": 1200.0,
     "is_refundable": false,
     "cancellation_fee": 1200.0,
-    "date_change_fee": 500.0
+    "date_change_fee": 500.0,
+    "seats_available": 28
   },
   {
     "bus_number": "KA-01-F-1234",
@@ -17,7 +18,8 @@
     "price": 1500.0,
     "is_refundable": true,
     "cancellation_fee": 300.0,
-    "date_change_fee": 0.0
+    "date_change_fee": 0.0,
+    "seats_available": 28
   },
   {
     "bus_number": "MH-12-PQ-9090",
@@ -27,6 +29,40 @@
     "price": 900.0,
     "is_refundable": false,
     "cancellation_fee": 900.0,
-    "date_change_fee": 400.0
+    "date_change_fee": 400.0,
+    "seats_available": 22
+  },
+  {
+    "bus_number": "MH-12-PQ-9090",
+    "travel_date": "2026-04-15",
+    "seat_type": "semi_sleeper",
+    "name": "FLEXI",
+    "price": 1100.0,
+    "is_refundable": true,
+    "cancellation_fee": 200.0,
+    "date_change_fee": 0.0,
+    "seats_available": 22
+  },
+  {
+    "bus_number": "TS-09-RT-4567",
+    "travel_date": "2026-04-15",
+    "seat_type": "seater",
+    "name": "GENERAL",
+    "price": 500.0,
+    "is_refundable": false,
+    "cancellation_fee": 500.0,
+    "date_change_fee": 200.0,
+    "seats_available": 48
+  },
+  {
+    "bus_number": "KA-01-F-1234",
+    "travel_date": "2026-04-16",
+    "seat_type": "sleeper",
+    "name": "GENERAL",
+    "price": 1250.0,
+    "is_refundable": false,
+    "cancellation_fee": 1250.0,
+    "date_change_fee": 500.0,
+    "seats_available": 28
   }
 ]

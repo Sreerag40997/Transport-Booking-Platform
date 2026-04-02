@@ -13,6 +13,8 @@ type BusRepository interface {
 	GetAmenitiesByInstanceID(id string) (interface{}, error)
 	GetBoardingPointsByInstanceID(id string) ([]model.BoardingPoint, error)
 	GetDroppingPointsByInstanceID(id string) ([]model.DroppingPoint, error)
+	SearchBusStops(search string) ([]model.BusStop, error)
+	GetAllOperators() ([]model.Operator, error)
 }
 
 type busRepository struct {
@@ -24,9 +26,10 @@ func NewBusRepository(db *gorm.DB) BusRepository {
 }
 
 func (r *busRepository) SearchBuses(filter model.SearchBusFilter) ([]model.BusInstance, error) {
-	var instances []model.BusInstance
-	
+	instances := make([]model.BusInstance, 0)
+
 	query := r.db.Preload("Bus").Preload("Bus.Operator").Preload("Bus.BusType").
+		Preload("Bus.OriginStop").Preload("Bus.DestinationStop").
 		Joins("JOIN buses ON buses.id = bus_instances.bus_id").
 		Joins("JOIN bus_stops AS origin_stop ON origin_stop.id = buses.origin_stop_id").
 		Joins("JOIN bus_stops AS dest_stop ON dest_stop.id = buses.destination_stop_id").
@@ -34,18 +37,23 @@ func (r *busRepository) SearchBuses(filter model.SearchBusFilter) ([]model.BusIn
 		Where("DATE(bus_instances.travel_date) = ?", filter.TravelDate)
 
 	if filter.Origin != "" {
-		query = query.Where("origin_stop.name ILIKE ?", "%"+filter.Origin+"%")
+		query = query.Where("(origin_stop.name ILIKE ? OR origin_stop.city ILIKE ?)", "%"+filter.Origin+"%", "%"+filter.Origin+"%")
 	}
 	if filter.Destination != "" {
-		query = query.Where("dest_stop.name ILIKE ?", "%"+filter.Destination+"%")
+		query = query.Where("(dest_stop.name ILIKE ? OR dest_stop.city ILIKE ?)", "%"+filter.Destination+"%", "%"+filter.Destination+"%")
 	}
 
 	// Dynamic capacity checks based on SeatType request
-	if filter.SeatType != "" && filter.Passengers > 0 {
-		switch filter.SeatType {
+	seatTypeLower := ""
+	if filter.SeatType != "" {
+		seatTypeLower = filter.SeatType
+	}
+
+	if seatTypeLower != "" && filter.Passengers > 0 {
+		switch seatTypeLower {
 		case "seater":
 			query = query.Where("bus_instances.available_seater >= ?", filter.Passengers)
-		case "semi_sleeper":
+		case "semi_sleeper", "semi-sleeper":
 			query = query.Where("bus_instances.available_semi_sleeper >= ?", filter.Passengers)
 		case "sleeper":
 			query = query.Where("bus_instances.available_sleeper >= ?", filter.Passengers)
@@ -56,7 +64,7 @@ func (r *busRepository) SearchBuses(filter model.SearchBusFilter) ([]model.BusIn
 
 	// Operator Filter
 	if filter.Operator != "" {
-		query = query.Where("operators.operator_code = ?", filter.Operator)
+		query = query.Where("operators.operator_code ILIKE ?", "%"+filter.Operator+"%")
 	}
 
 	// Price range check
@@ -79,13 +87,13 @@ func (r *busRepository) SearchBuses(filter model.SearchBusFilter) ([]model.BusIn
 	if filter.DepartureTime != "" {
 		switch filter.DepartureTime {
 		case "morning":
-			query = query.Where("buses.departure_time >= '06:00:00' AND buses.departure_time < '12:00:00'")
+			query = query.Where("buses.departure_time::time >= '06:00:00'::time AND buses.departure_time::time < '12:00:00'::time")
 		case "afternoon":
-			query = query.Where("buses.departure_time >= '12:00:00' AND buses.departure_time < '17:00:00'")
+			query = query.Where("buses.departure_time::time >= '12:00:00'::time AND buses.departure_time::time < '17:00:00'::time")
 		case "evening":
-			query = query.Where("buses.departure_time >= '17:00:00' AND buses.departure_time < '21:00:00'")
+			query = query.Where("buses.departure_time::time >= '17:00:00'::time AND buses.departure_time::time < '21:00:00'::time")
 		case "night":
-			query = query.Where("buses.departure_time >= '21:00:00' OR buses.departure_time < '06:00:00'")
+			query = query.Where("buses.departure_time::time >= '21:00:00'::time OR buses.departure_time::time < '06:00:00'::time")
 		}
 	}
 
@@ -153,4 +161,21 @@ func (r *busRepository) GetDroppingPointsByInstanceID(id string) ([]model.Droppi
 	var points []model.DroppingPoint
 	err := r.db.Preload("BusStop").Where("bus_instance_id = ?", id).Order("sequence_order ASC").Find(&points).Error
 	return points, err
+}
+
+func (r *busRepository) SearchBusStops(search string) ([]model.BusStop, error) {
+	var stops []model.BusStop
+	query := r.db.Order("name ASC")
+	if search != "" {
+		query = query.Where("name ILIKE ? OR city ILIKE ? OR state ILIKE ?",
+			"%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+	err := query.Find(&stops).Error
+	return stops, err
+}
+
+func (r *busRepository) GetAllOperators() ([]model.Operator, error) {
+	var operators []model.Operator
+	err := r.db.Where("is_active = true").Order("name ASC").Find(&operators).Error
+	return operators, err
 }

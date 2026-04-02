@@ -19,13 +19,16 @@ func SetupBusRoutes(app *fiber.App, db *gorm.DB) {
 	//----------------------- PUBLIC ENDPOINTS -----------------------
 
 	api.Get("/search", busHandler.SearchBuses)
+	api.Get("/bus-stops", busHandler.GetBusStops)
+	api.Get("/operators", busHandler.GetOperators)
 
+	api.Get("/:instanceId", busHandler.GetBus)
 	api.Get("/:instanceId/fares", busHandler.GetBusFares)
 	api.Get("/:instanceId/seats", busHandler.GetBusSeats)
 	api.Get("/:instanceId/amenities", busHandler.GetBusAmenities)
 	api.Get("/:instanceId/boarding-points", busHandler.GetBoardingPoints)
-
-	api.Get("/:instanceId", busHandler.GetBus)
+	api.Get("/:instanceId/dropping-points", busHandler.GetDroppingPoints)
+	api.Get("/:instanceId/route", busHandler.GetRoute)
 
 	//----------------------- PRIVATE ENDPOINTS  -----------------------
 
