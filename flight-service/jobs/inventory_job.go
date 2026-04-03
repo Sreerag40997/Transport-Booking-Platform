@@ -22,10 +22,9 @@ type SeatLayout struct {
 	} `json:"business"`
 }
 
-// GenerateUpcomingInventory securely projects 30 days of repeating routes into raw usable table instances.
-
+// GenerateUpcomingInventory securely projects 30 days of repeating routes
 func GenerateUpcomingInventory(db *gorm.DB) {
-	log.Println("[CRON] Starting 30-Day Inventory Generation Expansion...")
+	log.Println("CRON Starting 30-Day Inventory Generation Expansion")
 
 	var flights []models.Flight
 	if err := db.Preload("AircraftType").Where("is_active = ?", true).Find(&flights).Error; err != nil {
@@ -56,7 +55,7 @@ func GenerateUpcomingInventory(db *gorm.DB) {
 			}
 		}
 	}
-	log.Printf("[CRON] Expansion completed successfully. %d new daily instances generated.\n", insertedCount)
+	log.Printf("CRON Expansion completed successfully. %d new daily instances generated.\n", insertedCount)
 }
 
 func contains(arr []int64, val int64) bool {
@@ -85,7 +84,7 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 		Status:               models.SCHEDULED,
 		AvailableEconomy:     0,
 		AvailableBusiness:    0,
-		BasePriceEconomy:     5000.0, // Statically seeded, real logic would query active pricing engine rules
+		BasePriceEconomy:     5000.0, //  real logic would query active pricing engine rules
 		CurrentPriceEconomy:  5000.0,
 		BasePriceBusiness:    15000.0,
 		CurrentPriceBusiness: 15000.0,
@@ -103,7 +102,7 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 
 	err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&instance).Error
 	if err != nil {
-		return false // Real DB error occurred
+		return false
 	}
 
 	if instance.ID.String() == "00000000-0000-0000-0000-000000000000" || instance.ID.String() == "" {
@@ -117,7 +116,6 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 	}
 	db.Create(&fares)
 
-	// == STEP 2: SEAT MATRIX UNROLLING ==
 	var seats []models.Seat
 	currentRow := 1
 

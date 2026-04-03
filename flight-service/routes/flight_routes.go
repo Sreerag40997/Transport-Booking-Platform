@@ -17,9 +17,12 @@ func SetupFlightRoutes(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api/flights")
 
 	api.Get("/search", flightHandler.Search)
-	api.Get("/:instanceId", flightHandler.GetFlightDetails)
+
 	api.Get("/:instanceId/fares", flightHandler.GetFares)
 	api.Get("/:instanceId/seats", flightHandler.GetSeatMap)
 	api.Get("/:instanceId/ancillaries", flightHandler.GetAncillaries)
 	api.Get("/:instanceId/fare-prediction", flightHandler.GetFarePrediction)
+	api.Get("/airports", flightHandler.SearchAirport)
+	api.Get("/airlines", flightHandler.GetAirlines)
+	api.Get("/:instanceId", flightHandler.GetFlightDetails)
 }

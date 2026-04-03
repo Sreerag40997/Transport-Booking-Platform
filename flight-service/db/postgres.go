@@ -26,7 +26,15 @@ func ConnectPostgres(cfg *config.Config) {
 		&models.Flight{},
 		&models.FlightInstance{},
 		&models.FareType{},
-		&models.Seat{}); err != nil {
+		&models.Seat{},
+		&models.Agent{},
+		&models.AgentInventory{},
+		&models.Booking{},
+		&models.Passenger{},
+		&models.Ancillary{},
+		&models.CancellationPolicy{},
+		&models.Cancellation{},
+		&models.ETicket{}); err != nil {
 		log.Fatal("db migration failed")
 	}
 

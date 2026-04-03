@@ -27,6 +27,7 @@ func main() {
 
 	// Register all external API Routes
 	routes.SetupFlightRoutes(app, db.DB)
+	routes.SetupBookingRoutes(app, db.DB)
 
 	// Start Background Job Scheduler
 	c := cron.New()
@@ -39,5 +40,3 @@ func main() {
 
 	app.Listen(":" + cfg.APP_PORT)
 }
-
-//test
