@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/junaid9001/tripneo/flight-service/domain_errors"
 	"github.com/junaid9001/tripneo/flight-service/dto"
 	"github.com/junaid9001/tripneo/flight-service/models"
 	"gorm.io/gorm"
@@ -73,4 +74,31 @@ func (r *FlightRepository) GetSeatsByInstanceID(id string) ([]models.Seat, error
 	var seats []models.Seat
 	err := r.db.Where("flight_instance_id = ?", id).Order("seat_number ASC").Find(&seats).Error
 	return seats, err
+}
+
+func (r *FlightRepository) SearchAirport(search string) ([]models.Airport, error) {
+	var airports []models.Airport
+	pattern := "%" + search + "%"
+
+	err := r.db.Where("LOWER(name) LIKE ? OR LOWER(city) LIKE ? OR LOWER(iata_code) LIKE ?",
+		pattern,
+		pattern,
+		pattern,
+	).Find(&airports).Error
+	if err != nil {
+
+		return nil, domain_errors.ErrInternalServerError
+	}
+	return airports, nil
+
+}
+
+func (r *FlightRepository) GetAirlines() ([]models.Airline, error) {
+
+	var airlines []models.Airline
+
+	if err := r.db.Find(&airlines).Error; err != nil {
+		return nil, domain_errors.ErrInternalServerError
+	}
+	return airlines, nil
 }
