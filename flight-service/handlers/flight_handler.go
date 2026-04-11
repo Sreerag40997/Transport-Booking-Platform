@@ -33,8 +33,8 @@ func (h *FlightHandler) Search(c fiber.Ctx) error {
 
 	results, err := h.flightService.SearchFlights(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error occurred while searching for flights",
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 

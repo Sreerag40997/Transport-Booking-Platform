@@ -4,9 +4,12 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/junaid9001/tripneo/flight-service/config"
 	"github.com/junaid9001/tripneo/flight-service/db"
+	"github.com/junaid9001/tripneo/flight-service/handlers"
 	"github.com/junaid9001/tripneo/flight-service/jobs"
+	"github.com/junaid9001/tripneo/flight-service/redis"
 	"github.com/junaid9001/tripneo/flight-service/routes"
 	"github.com/junaid9001/tripneo/flight-service/seed"
+	"github.com/junaid9001/tripneo/flight-service/services"
 	"github.com/robfig/cron/v3"
 )
 
@@ -14,6 +17,10 @@ func main() {
 	cfg := config.LoadConfig()
 
 	db.ConnectPostgres(cfg)
+	redis.ConnectRedis(cfg)
+
+	// Start Redis Expiry Subscriber in background
+	go services.StartRedisExpirySubscriber()
 
 	if cfg.RUN_SEED_ON_BOOT == "true" {
 		seed.SeedAll(db.DB)
@@ -25,6 +32,10 @@ func main() {
 		return c.SendString("ok")
 	})
 
+	// WebSocket Route (Should be properly authenticated in a real scenario)
+	app.Use("/api/flights/ws", handlers.WebsocketUpgradeMiddleware)
+	app.Get("/api/flights/ws", handlers.HandleWebSocket)
+
 	// Register all external API Routes
 	routes.SetupFlightRoutes(app, db.DB)
 	routes.SetupBookingRoutes(app, db.DB)
@@ -33,6 +44,9 @@ func main() {
 	c := cron.New()
 	c.AddFunc("0 0 * * *", func() {
 		jobs.GenerateUpcomingInventory(db.DB)
+	})
+	c.AddFunc("*/5 * * * *", func() {
+		jobs.CleanupExpiredBookings(db.DB)
 	})
 	c.Start()
 

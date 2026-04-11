@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type FlightSearchRequest struct {
 	Origin        string `query:"origin"`
 	Destination   string `query:"destination"`
@@ -19,6 +17,7 @@ type FlightSearchRequest struct {
 
 // FareResponse represents individual pricing tiers matching the flight
 type FareResponse struct {
+	ID    string  `json:"id"`
 	Class string  `json:"class"`
 	Name  string  `json:"name"` // Saver, Flexi, Super Flexi
 	Price float64 `json:"price"`
@@ -32,8 +31,8 @@ type FlightSearchResponse struct {
 	AirlineLogo     string         `json:"airline_logo"`
 	Origin          string         `json:"origin"`
 	Destination     string         `json:"destination"`
-	DepartureTime   time.Time      `json:"departure_time"`
-	ArrivalTime     time.Time      `json:"arrival_time"`
+	DepartureTime   string         `json:"departure_time"` // ISO8601 standardized format
+	ArrivalTime     string         `json:"arrival_time"`   // ISO8601 standardized format
 	DurationMinutes int            `json:"duration_minutes"`
 	Fares           []FareResponse `json:"fares"`
 }
@@ -42,15 +41,16 @@ type InstanceDetailsResponse struct {
 	InstanceID      string    `json:"instance_id"`
 	FlightNumber    string    `json:"flight_number"`
 	AirlineName     string    `json:"airline_name"`
-	Origin          string    `json:"origin"`
-	Destination     string    `json:"destination"`
-	DepartureTime   time.Time `json:"departure_time"`
-	ArrivalTime     time.Time `json:"arrival_time"`
-	DurationMinutes int       `json:"duration_minutes"`
-	Status          string    `json:"status"`
+	Origin          string `json:"origin"`
+	Destination     string `json:"destination"`
+	DepartureTime   string `json:"departure_time"` // ISO8601 standardized format
+	ArrivalTime     string `json:"arrival_time"`   // ISO8601 standardized format
+	DurationMinutes int    `json:"duration_minutes"`
+	Status          string `json:"status"`
 }
 
 type SeatDto struct {
+	ID          string  `json:"id"`
 	SeatNumber  string  `json:"seat_number"`
 	SeatClass   string  `json:"seat_class"`
 	IsAvailable bool    `json:"is_available"`
