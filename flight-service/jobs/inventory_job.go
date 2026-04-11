@@ -23,7 +23,6 @@ type SeatLayout struct {
 	} `json:"business"`
 }
 
-// GenerateUpcomingInventory securely projects 30 days of repeating routes
 func GenerateUpcomingInventory(db *gorm.DB) {
 	log.Println("CRON Starting 30-Day Inventory Generation Expansion")
 
@@ -72,7 +71,7 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 	departureAt := combineDateAndTime(targetDate, flight.DepartureTime)
 	arrivalAt := combineDateAndTime(targetDate, flight.ArrivalTime)
 
-	// Normalize if flight traverses strictly past midnight
+	// Normalize if flight traverses past midnight
 	if arrivalAt.Before(departureAt) {
 		arrivalAt = arrivalAt.Add(24 * time.Hour)
 	}
@@ -85,8 +84,6 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 		Status:               models.SCHEDULED,
 		AvailableEconomy:     0,
 		AvailableBusiness:    0,
-		BasePriceEconomy:     5000.0, //  real logic would query active pricing engine rules
-		CurrentPriceEconomy:  5000.0,
 		BasePriceBusiness:    15000.0,
 		CurrentPriceBusiness: 15000.0,
 	}
@@ -132,7 +129,7 @@ func generateForDate(db *gorm.DB, flight models.Flight, targetDate time.Time) bo
 	var seats []models.Seat
 	currentRow := 1
 
-	// For a 30% quota, we only generate the first 30% of rows for our platform
+	// Generate first 30% of rows for our platform
 	if layout.Business != nil {
 		quotaRows := int(float64(layout.Business.Rows) * 0.3)
 		if quotaRows == 0 && layout.Business.Rows > 0 {

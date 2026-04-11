@@ -73,7 +73,7 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 		})
 	}
 
-	taxes := totalBase * 0.18 // fake 18% tax
+	taxes := totalBase * 0.18 // 18% tax
 	serviceFee := 500.0
 	totalAmount := totalBase + taxes + serviceFee + ancTotal
 
@@ -81,7 +81,7 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 	var lockedSeats []string
 	ctx := context.Background()
 
-	// Safe cleanup for failed transactions
+	// safe cleanup for failed transactions
 	lockSucceeded := false
 	defer func() {
 		if !lockSucceeded {
@@ -95,7 +95,7 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 		dob, _ := time.Parse("2006-01-02", p.DateOfBirth)
 		var sId *uuid.UUID = nil
 
-		// Infant In-Lap Policy: Skip seat selection for infants
+		// infants don't occupy seats
 		if p.PassengerType == "infant" {
 			sId = nil
 		} else if p.SeatID != "" {
@@ -104,7 +104,7 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 				return nil, errors.New("seat already permanently booked or currently held")
 			}
 
-			// Hold seat for 10 minutes
+			// 10 minute hold
 			acquired, err := redis.AcquireSeatLock(ctx, p.SeatID, userID, 10*time.Minute)
 			if err != nil || !acquired {
 				return nil, errors.New("seat is currently held by another user")
@@ -165,7 +165,6 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 		return nil, err
 	}
 
-	// Keep locks until confirmed or expired
 	lockSucceeded = true
 
 	return mapBookingToDTO(booking), nil
@@ -286,7 +285,6 @@ func (s *BookingService) ConfirmBooking(id string) error {
 		return err
 	}
 
-	// Release the transient Redis locks to stop expiry ping
 	ctx := context.Background()
 	for _, p := range booking.Passengers {
 		if p.SeatID != nil {
@@ -308,7 +306,7 @@ func (s *BookingService) CancelBooking(id string, req *dto.CancelBookingRequest)
 		return errors.New("cannot cancel a non-confirmed booking")
 	}
 
-	refundAmount := booking.TotalAmount * 0.9 // flat 90% mock refund
+	refundAmount := booking.TotalAmount * 0.9 // 90% refund
 	reason := "User requested"
 	if req.Reason != "" {
 		reason = req.Reason

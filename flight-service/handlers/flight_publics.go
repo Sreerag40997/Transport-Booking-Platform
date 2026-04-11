@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// search or autocomplte airport
 func (h *FlightHandler) SearchAirport(c fiber.Ctx) error {
 
 	search := c.Query("search", "del")

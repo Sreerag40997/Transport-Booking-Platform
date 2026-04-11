@@ -8,13 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// CleanupExpiredBookings marks bookings as EXPIRED if the payment time has elapsed.
 func CleanupExpiredBookings(db *gorm.DB) {
 	log.Println("CRON Running stale bookings cleanup")
-	
+
 	now := time.Now()
-	
-	// Simply update PENDING_PAYMENT to EXPIRED directly
+
 	res := db.Model(&models.Booking{}).
 		Where("status = ?", "PENDING_PAYMENT").
 		Where("expires_at < ?", now).

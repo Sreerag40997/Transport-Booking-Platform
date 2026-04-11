@@ -48,7 +48,6 @@ func (r *BookingRepository) CreateCancellation(cancellation *models.Cancellation
 			return err
 		}
 
-		// Re-open seats
 		for _, p := range booking.Passengers {
 			if p.SeatID != nil {
 				if err := tx.Model(&models.Seat{}).Where("id = ?", p.SeatID).Update("is_available", true).Error; err != nil {
@@ -84,7 +83,6 @@ func (r *BookingRepository) ConfirmBookingAndSeats(booking *models.Booking, tick
 			return err
 		}
 
-		// Lock seats permanently in DB
 		for _, p := range booking.Passengers {
 			if p.SeatID != nil {
 				if err := tx.Model(&models.Seat{}).Where("id = ?", p.SeatID).Update("is_available", false).Error; err != nil {
@@ -93,7 +91,6 @@ func (r *BookingRepository) ConfirmBookingAndSeats(booking *models.Booking, tick
 			}
 		}
 
-		// Save ticket
 		if err := tx.Create(ticket).Error; err != nil {
 			return err
 		}

@@ -17,7 +17,6 @@ func NewBookingHandler(service *services.BookingService) *BookingHandler {
 	return &BookingHandler{service}
 }
 
-// POST bookings
 func (h *BookingHandler) CreateBooking(c fiber.Ctx) error {
 	userIDVal := c.Locals("userID")
 	userIDStr := ""
@@ -39,7 +38,6 @@ func (h *BookingHandler) CreateBooking(c fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(resp)
 }
 
-// GET bookings/:bookingId
 func (h *BookingHandler) GetBookingByID(c fiber.Ctx) error {
 	id := c.Params("bookingId")
 	booking, err := h.service.GetBookingByID(id)
@@ -50,7 +48,6 @@ func (h *BookingHandler) GetBookingByID(c fiber.Ctx) error {
 	return c.JSON(booking)
 }
 
-// GET bookings/pnr/:pnr
 func (h *BookingHandler) GetBookingByPNR(c fiber.Ctx) error {
 	pnr := c.Params("pnr")
 	booking, err := h.service.GetBookingByPNR(pnr)
@@ -61,7 +58,6 @@ func (h *BookingHandler) GetBookingByPNR(c fiber.Ctx) error {
 	return c.JSON(booking)
 }
 
-// GET bookings/user/history
 func (h *BookingHandler) GetUserHistory(c fiber.Ctx) error {
 	userIDVal := c.Locals("userID")
 	userIDStr := ""
@@ -77,7 +73,6 @@ func (h *BookingHandler) GetUserHistory(c fiber.Ctx) error {
 	return c.JSON(bookings)
 }
 
-// POST bookings/:bookingId/confirm
 func (h *BookingHandler) ConfirmBooking(c fiber.Ctx) error {
 	id := c.Params("bookingId")
 
@@ -88,7 +83,6 @@ func (h *BookingHandler) ConfirmBooking(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "booking confirmed successfully"})
 }
 
-// POST /api/v1/bookings/:bookingId/cancel
 func (h *BookingHandler) CancelBooking(c fiber.Ctx) error {
 	id := c.Params("bookingId")
 	var req dto.CancelBookingRequest
@@ -103,7 +97,6 @@ func (h *BookingHandler) CancelBooking(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "booking cancelled successfully"})
 }
 
-// GET bookings/:bookingId/ticket
 func (h *BookingHandler) GetTicket(c fiber.Ctx) error {
 	id := c.Params("bookingId")
 

@@ -14,7 +14,6 @@ func NewFlightHandler(fs *services.FlightService) *FlightHandler {
 	return &FlightHandler{flightService: fs}
 }
 
-// Search
 func (h *FlightHandler) Search(c fiber.Ctx) error {
 	var req dto.FlightSearchRequest
 

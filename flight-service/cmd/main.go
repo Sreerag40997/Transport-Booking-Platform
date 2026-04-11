@@ -19,7 +19,6 @@ func main() {
 	db.ConnectPostgres(cfg)
 	redis.ConnectRedis(cfg)
 
-	// Start Redis Expiry Subscriber in background
 	go services.StartRedisExpirySubscriber()
 
 	if cfg.RUN_SEED_ON_BOOT == "true" {
@@ -32,15 +31,12 @@ func main() {
 		return c.SendString("ok")
 	})
 
-	// WebSocket Route (Should be properly authenticated in a real scenario)
 	app.Use("/api/flights/ws", handlers.WebsocketUpgradeMiddleware)
 	app.Get("/api/flights/ws", handlers.HandleWebSocket)
 
-	// Register all external API Routes
 	routes.SetupFlightRoutes(app, db.DB)
 	routes.SetupBookingRoutes(app, db.DB)
 
-	// Start Background Job Scheduler
 	c := cron.New()
 	c.AddFunc("0 0 * * *", func() {
 		jobs.GenerateUpcomingInventory(db.DB)
