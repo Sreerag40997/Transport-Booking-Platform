@@ -37,9 +37,9 @@ func (r *FlightRepository) FindFlights(req dto.FlightSearchRequest, searchDate t
 
 	className := strings.ToUpper(req.Class)
 	if className == "BUSINESS" {
-		query = query.Where("flight_instances.available_business >= ?", req.Passengers)
+		query = query.Where("flight_instances.platform_quota_business >= ?", req.Passengers)
 	} else {
-		query = query.Where("flight_instances.available_economy >= ?", req.Passengers)
+		query = query.Where("flight_instances.platform_quota_economy >= ?", req.Passengers)
 	}
 
 	if err := query.Find(&instances).Error; err != nil {

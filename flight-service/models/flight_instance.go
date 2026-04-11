@@ -38,6 +38,9 @@ type FlightInstance struct {
 	AvailableEconomy  int `gorm:"not null"`
 	AvailableBusiness int `gorm:"not null"`
 
+	PlatformQuotaEconomy  int `gorm:"not null;default:0"`
+	PlatformQuotaBusiness int `gorm:"not null;default:0"`
+
 	BasePriceEconomy     float64 `gorm:"type:decimal(10,2);not null"`
 	BasePriceBusiness    float64 `gorm:"type:decimal(10,2);not null"`
 	CurrentPriceEconomy  float64 `gorm:"type:decimal(10,2);not null"`

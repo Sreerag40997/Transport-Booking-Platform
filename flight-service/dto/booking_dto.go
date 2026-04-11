@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type PassengerDto struct {
 	FirstName      string `json:"first_name"`
 	LastName       string `json:"last_name"`
@@ -33,15 +31,23 @@ type CreateBookingRequest struct {
 }
 
 type BookingResponse struct {
-	ID               string    `json:"id"`
-	PNR              string    `json:"pnr"`
-	FlightInstanceID string    `json:"flight_instance_id"`
-	Source           string    `json:"source"`
-	Status           string    `json:"status"`
-	TotalAmount      float64   `json:"total_amount"`
-	Currency         string    `json:"currency"`
-	BookedAt         time.Time `json:"booked_at"`
-	ExpiresAt        *time.Time `json:"expires_at,omitempty"`
+	ID               string             `json:"id"`
+	PNR              string             `json:"pnr"`
+	FlightInstanceID string             `json:"flight_instance_id"`
+	Source           string             `json:"source"`
+	Status           string             `json:"status"`
+	SeatClass        string             `json:"seat_class"`
+	TripType         string             `json:"trip_type"`
+	Passengers       []PassengerDto     `json:"passengers,omitempty"`
+	Ancillaries      []AncillaryBookDto `json:"ancillaries,omitempty"`
+	BaseFare         float64            `json:"base_fare"`
+	Taxes            float64            `json:"taxes"`
+	ServiceFee       float64            `json:"service_fee"`
+	AncillariesTotal float64            `json:"ancillaries_total"`
+	TotalAmount      float64            `json:"total_amount"`
+	Currency         string             `json:"currency"`
+	BookedAt         string             `json:"booked_at"`
+	ExpiresAt        string             `json:"expires_at,omitempty"`
 }
 
 type CancelBookingRequest struct {

@@ -1,0 +1,31 @@
+package jobs
+
+import (
+	"log"
+	"time"
+
+	"github.com/junaid9001/tripneo/flight-service/models"
+	"gorm.io/gorm"
+)
+
+// CleanupExpiredBookings marks bookings as EXPIRED if the payment time has elapsed.
+func CleanupExpiredBookings(db *gorm.DB) {
+	log.Println("CRON Running stale bookings cleanup")
+	
+	now := time.Now()
+	
+	// Simply update PENDING_PAYMENT to EXPIRED directly
+	res := db.Model(&models.Booking{}).
+		Where("status = ?", "PENDING_PAYMENT").
+		Where("expires_at < ?", now).
+		Update("status", "EXPIRED")
+		
+	if res.Error != nil {
+		log.Println("[CRON ERROR] Failed to run booking cleanup:", res.Error)
+		return
+	}
+	
+	if res.RowsAffected > 0 {
+		log.Printf("CRON Cleanup completed: marked %d stale bookings as EXPIRED\n", res.RowsAffected)
+	}
+}

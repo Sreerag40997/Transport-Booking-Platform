@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/junaid9001/tripneo/flight-service/dto"
@@ -30,7 +32,8 @@ func (h *BookingHandler) CreateBooking(c fiber.Ctx) error {
 
 	resp, err := h.service.CreateBooking(userIDStr, &req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		log.Printf("CreateBooking Error: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(resp)

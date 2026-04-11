@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/junaid9001/tripneo/flight-service/dto"
 	"github.com/junaid9001/tripneo/flight-service/models"
+	"github.com/junaid9001/tripneo/flight-service/redis"
 	"github.com/junaid9001/tripneo/flight-service/repository"
 )
 
@@ -28,6 +30,10 @@ func generatePNR() string {
 }
 
 func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequest) (*dto.BookingResponse, error) {
+	if req.FlightInstanceID == "" || req.FareTypeID == "" {
+		return nil, errors.New("mandatory flight or fare ID missing")
+	}
+
 	flightInstance, err := s.repo.GetFlightInstanceByID(req.FlightInstanceID)
 	if err != nil {
 		return nil, errors.New("invalid flight instance")
@@ -36,6 +42,10 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 	_, err = s.repo.GetFareTypeByID(req.FareTypeID)
 	if err != nil {
 		return nil, errors.New("invalid fare type")
+	}
+
+	if len(req.Passengers) > 9 {
+		return nil, errors.New("maximum 9 passengers allowed per booking")
 	}
 
 	bdUserId, _ := uuid.Parse(userID)
@@ -68,10 +78,39 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 	totalAmount := totalBase + taxes + serviceFee + ancTotal
 
 	var passengers []models.Passenger
+	var lockedSeats []string
+	ctx := context.Background()
+
+	// Safe cleanup for failed transactions
+	lockSucceeded := false
+	defer func() {
+		if !lockSucceeded {
+			for _, ls := range lockedSeats {
+				_ = redis.ReleaseSeatLock(ctx, ls)
+			}
+		}
+	}()
+
 	for _, p := range req.Passengers {
 		dob, _ := time.Parse("2006-01-02", p.DateOfBirth)
 		var sId *uuid.UUID = nil
-		if p.SeatID != "" {
+
+		// Infant In-Lap Policy: Skip seat selection for infants
+		if p.PassengerType == "infant" {
+			sId = nil
+		} else if p.SeatID != "" {
+			seat, err := s.repo.GetSeatByID(p.SeatID)
+			if err != nil || !seat.IsAvailable {
+				return nil, errors.New("seat already permanently booked or currently held")
+			}
+
+			// Hold seat for 10 minutes
+			acquired, err := redis.AcquireSeatLock(ctx, p.SeatID, userID, 10*time.Minute)
+			if err != nil || !acquired {
+				return nil, errors.New("seat is currently held by another user")
+			}
+			lockedSeats = append(lockedSeats, p.SeatID)
+
 			sidVal, _ := uuid.Parse(p.SeatID)
 			sId = &sidVal
 		}
@@ -95,7 +134,7 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 	}
 
 	pnr := generatePNR()
-	expiresAt := time.Now().Add(15 * time.Minute)
+	expiresAt := time.Now().Add(10 * time.Minute)
 	var gstin *string = nil
 	if req.GSTIN != "" {
 		gstin = &req.GSTIN
@@ -126,29 +165,99 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 		return nil, err
 	}
 
+	// Keep locks until confirmed or expired
+	lockSucceeded = true
+
+	return mapBookingToDTO(booking), nil
+}
+
+func mapBookingToDTO(booking *models.Booking) *dto.BookingResponse {
+	var passengers []dto.PassengerDto
+	for _, p := range booking.Passengers {
+		var sId string
+		if p.SeatID != nil {
+			sId = p.SeatID.String()
+		}
+		var mp string
+		if p.MealPreference != nil {
+			mp = *p.MealPreference
+		}
+		passengers = append(passengers, dto.PassengerDto{
+			FirstName:      p.FirstName,
+			LastName:       p.LastName,
+			DateOfBirth:    p.DateOfBirth.Format("2006-01-02"),
+			Gender:         p.Gender,
+			PassengerType:  p.PassengerType,
+			IDType:         p.IDType,
+			IDNumber:       p.IDNumber,
+			SeatID:         sId,
+			MealPreference: mp,
+		})
+	}
+
+	var ancillaries []dto.AncillaryBookDto
+	for _, a := range booking.Ancillaries {
+		ancillaries = append(ancillaries, dto.AncillaryBookDto{
+			Type:        a.Type,
+			Description: a.Description,
+			Price:       a.Price,
+			Quantity:    a.Quantity,
+		})
+	}
+
+	var checkedExpiresAt string
+	if booking.ExpiresAt != nil {
+		checkedExpiresAt = booking.ExpiresAt.Format(time.RFC3339)
+	}
+
 	return &dto.BookingResponse{
 		ID:               booking.ID.String(),
 		PNR:              booking.PNR,
 		FlightInstanceID: booking.FlightInstanceID.String(),
 		Source:           booking.Source,
 		Status:           booking.Status,
+		SeatClass:        booking.SeatClass,
+		TripType:         booking.TripType,
+		BaseFare:         booking.BaseFare,
+		Taxes:            booking.Taxes,
+		ServiceFee:       booking.ServiceFee,
+		AncillariesTotal: booking.AncillariesTotal,
 		TotalAmount:      booking.TotalAmount,
 		Currency:         booking.Currency,
-		BookedAt:         booking.CreatedAt,
-		ExpiresAt:        booking.ExpiresAt,
-	}, nil
+		BookedAt:         booking.BookedAt.Format(time.RFC3339),
+		ExpiresAt:        checkedExpiresAt,
+		Passengers:       passengers,
+		Ancillaries:      ancillaries,
+	}
 }
 
-func (s *BookingService) GetBookingByID(id string) (*models.Booking, error) {
-	return s.repo.GetBookingByID(id)
+func (s *BookingService) GetBookingByID(id string) (*dto.BookingResponse, error) {
+	booking, err := s.repo.GetBookingByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return mapBookingToDTO(booking), nil
 }
 
-func (s *BookingService) GetBookingByPNR(pnr string) (*models.Booking, error) {
-	return s.repo.GetBookingByPNR(pnr)
+func (s *BookingService) GetBookingByPNR(pnr string) (*dto.BookingResponse, error) {
+	booking, err := s.repo.GetBookingByPNR(pnr)
+	if err != nil {
+		return nil, err
+	}
+	return mapBookingToDTO(booking), nil
 }
 
-func (s *BookingService) GetBookingsByUserID(userID string) ([]models.Booking, error) {
-	return s.repo.GetBookingsByUserID(userID)
+func (s *BookingService) GetBookingsByUserID(userID string) ([]dto.BookingResponse, error) {
+	bookings, err := s.repo.GetBookingsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []dto.BookingResponse
+	for _, b := range bookings {
+		responses = append(responses, *mapBookingToDTO(&b))
+	}
+	return responses, nil
 }
 
 func (s *BookingService) ConfirmBooking(id string) error {
@@ -165,10 +274,6 @@ func (s *BookingService) ConfirmBooking(id string) error {
 	now := time.Now()
 	booking.ConfirmedAt = &now
 
-	if err := s.repo.UpdateBooking(booking); err != nil {
-		return err
-	}
-
 	qrData := "MOCK_SIGNED_QR_DATA_" + booking.PNR
 	eTicket := &models.ETicket{
 		BookingID:    booking.ID,
@@ -176,7 +281,18 @@ func (s *BookingService) ConfirmBooking(id string) error {
 		QRCodeURL:    "https://storage.tripneo.com/qr/" + booking.PNR + ".png",
 		QRData:       qrData,
 	}
-	s.repo.SaveETicket(eTicket)
+
+	if err := s.repo.ConfirmBookingAndSeats(booking, eTicket); err != nil {
+		return err
+	}
+
+	// Release the transient Redis locks to stop expiry ping
+	ctx := context.Background()
+	for _, p := range booking.Passengers {
+		if p.SeatID != nil {
+			_ = redis.ReleaseSeatLock(ctx, p.SeatID.String())
+		}
+	}
 
 	log.Println("[KAFKA MOCK] Published event: flight.booking.confirmed for PNR:", booking.PNR)
 	return nil
@@ -205,7 +321,7 @@ func (s *BookingService) CancelBooking(id string, req *dto.CancelBookingRequest)
 		RefundStatus: "PROCESSING",
 	}
 
-	if err := s.repo.CreateCancellation(cancelData); err != nil {
+	if err := s.repo.CreateCancellation(cancelData, booking); err != nil {
 		return err
 	}
 

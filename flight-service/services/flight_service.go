@@ -51,14 +51,15 @@ func (s *FlightService) SearchFlights(req dto.FlightSearchRequest) ([]dto.Flight
 			AirlineLogo:     inst.Flight.Airline.LogoUrl,
 			Origin:          inst.Flight.OriginAirport.IataCode,
 			Destination:     inst.Flight.DestinationAirport.IataCode,
-			DepartureTime:   inst.DepartureAt,
-			ArrivalTime:     inst.ArrivalAt,
+			DepartureTime:   inst.DepartureAt.Format(time.RFC3339),
+			ArrivalTime:     inst.ArrivalAt.Format(time.RFC3339),
 			DurationMinutes: inst.Flight.DurationMinutes,
 		}
 
 		for _, f := range fares {
 			if f.FlightInstanceID == inst.ID {
 				flightDto.Fares = append(flightDto.Fares, dto.FareResponse{
+					ID:    f.ID.String(),
 					Class: f.SeatClass,
 					Name:  f.Name,
 					Price: f.Price,
@@ -83,8 +84,8 @@ func (s *FlightService) GetFlightDetails(instanceId string) (*dto.InstanceDetail
 		AirlineName:     inst.Flight.Airline.Name,
 		Origin:          inst.Flight.OriginAirport.IataCode,
 		Destination:     inst.Flight.DestinationAirport.IataCode,
-		DepartureTime:   inst.DepartureAt,
-		ArrivalTime:     inst.ArrivalAt,
+		DepartureTime:   inst.DepartureAt.Format(time.RFC3339),
+		ArrivalTime:     inst.ArrivalAt.Format(time.RFC3339),
 		DurationMinutes: inst.Flight.DurationMinutes,
 		Status:          string(inst.Status),
 	}, nil
@@ -97,7 +98,7 @@ func (s *FlightService) GetFares(instanceId string) ([]dto.FareResponse, error) 
 	}
 	var responses []dto.FareResponse
 	for _, f := range fares {
-		responses = append(responses, dto.FareResponse{Class: f.SeatClass, Name: f.Name, Price: f.Price})
+		responses = append(responses, dto.FareResponse{ID: f.ID.String(), Class: f.SeatClass, Name: f.Name, Price: f.Price})
 	}
 	return responses, nil
 }
@@ -109,7 +110,7 @@ func (s *FlightService) GetSeatMap(instanceId string) (*dto.SeatMapResponse, err
 	}
 	res := &dto.SeatMapResponse{}
 	for _, st := range seats {
-		mapped := dto.SeatDto{SeatNumber: st.SeatNumber, SeatClass: st.SeatClass, IsAvailable: st.IsAvailable, ExtraCharge: st.ExtraCharge}
+		mapped := dto.SeatDto{ID: st.ID.String(), SeatNumber: st.SeatNumber, SeatClass: st.SeatClass, IsAvailable: st.IsAvailable, ExtraCharge: st.ExtraCharge}
 		if st.SeatClass == "ECONOMY" {
 			res.EconomySeats = append(res.EconomySeats, mapped)
 		} else {

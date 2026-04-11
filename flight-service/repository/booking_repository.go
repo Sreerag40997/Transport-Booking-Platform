@@ -39,12 +39,82 @@ func (r *BookingRepository) UpdateBooking(booking *models.Booking) error {
 	return r.db.Save(booking).Error
 }
 
-func (r *BookingRepository) CreateCancellation(cancellation *models.Cancellation) error {
+func (r *BookingRepository) CreateCancellation(cancellation *models.Cancellation, booking *models.Booking) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(cancellation).Error; err != nil {
 			return err
 		}
-		return tx.Model(&models.Booking{}).Where("id = ?", cancellation.BookingID).Update("status", "CANCELLED").Error
+		if err := tx.Model(&models.Booking{}).Where("id = ?", cancellation.BookingID).Update("status", "CANCELLED").Error; err != nil {
+			return err
+		}
+
+		// Re-open seats
+		for _, p := range booking.Passengers {
+			if p.SeatID != nil {
+				if err := tx.Model(&models.Seat{}).Where("id = ?", p.SeatID).Update("is_available", true).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		// Update availability counts
+		if len(booking.Passengers) > 0 {
+			col := "available_economy"
+			quotaCol := "platform_quota_economy"
+			if booking.SeatClass == "BUSINESS" {
+				col = "available_business"
+				quotaCol = "platform_quota_business"
+			}
+			if err := tx.Model(&models.FlightInstance{}).Where("id = ?", booking.FlightInstanceID).Updates(map[string]interface{}{
+				col:      gorm.Expr(col+" + ?", len(booking.Passengers)),
+				quotaCol: gorm.Expr(quotaCol+" + ?", len(booking.Passengers)),
+			}).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (r *BookingRepository) ConfirmBookingAndSeats(booking *models.Booking, ticket *models.ETicket) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Update booking status
+		if err := tx.Save(booking).Error; err != nil {
+			return err
+		}
+
+		// Lock seats permanently in DB
+		for _, p := range booking.Passengers {
+			if p.SeatID != nil {
+				if err := tx.Model(&models.Seat{}).Where("id = ?", p.SeatID).Update("is_available", false).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		// Save ticket
+		if err := tx.Create(ticket).Error; err != nil {
+			return err
+		}
+
+		// Deduct availability counts 
+		if len(booking.Passengers) > 0 {
+			col := "available_economy"
+			quotaCol := "platform_quota_economy"
+			if booking.SeatClass == "BUSINESS" {
+				col = "available_business"
+				quotaCol = "platform_quota_business"
+			}
+			if err := tx.Model(&models.FlightInstance{}).Where("id = ?", booking.FlightInstanceID).Updates(map[string]interface{}{
+				col:      gorm.Expr(col+" - ?", len(booking.Passengers)),
+				quotaCol: gorm.Expr(quotaCol+" - ?", len(booking.Passengers)),
+			}).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }
 
@@ -68,4 +138,10 @@ func (r *BookingRepository) GetFareTypeByID(id string) (*models.FareType, error)
 	var fare models.FareType
 	err := r.db.First(&fare, "id = ?", id).Error
 	return &fare, err
+}
+
+func (r *BookingRepository) GetSeatByID(id string) (*models.Seat, error) {
+	var seat models.Seat
+	err := r.db.First(&seat, "id = ?", id).Error
+	return &seat, err
 }
