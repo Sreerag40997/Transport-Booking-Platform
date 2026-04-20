@@ -10,17 +10,27 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/junaid9001/tripneo/flight-service/dto"
+	"github.com/junaid9001/tripneo/flight-service/kafka"
 	"github.com/junaid9001/tripneo/flight-service/models"
 	"github.com/junaid9001/tripneo/flight-service/redis"
 	"github.com/junaid9001/tripneo/flight-service/repository"
+	"github.com/junaid9001/tripneo/flight-service/rpc"
+	"github.com/junaid9001/tripneo/flight-service/ws"
 )
 
 type BookingService struct {
-	repo *repository.BookingRepository
+	repo         *repository.BookingRepository
+	payClient    *rpc.PaymentClient
+	wsManager    *ws.Manager
+	razorpayChan chan string // used to pass order IDs back to DTO mapper
 }
 
-func NewBookingService(repo *repository.BookingRepository) *BookingService {
-	return &BookingService{repo}
+func NewBookingService(repo *repository.BookingRepository, payClient *rpc.PaymentClient, wsManager *ws.Manager) *BookingService {
+	return &BookingService{
+		repo:      repo,
+		payClient: payClient,
+		wsManager: wsManager,
+	}
 }
 
 func generatePNR() string {
@@ -167,6 +177,22 @@ func (s *BookingService) CreateBooking(userID string, req *dto.CreateBookingRequ
 
 	lockSucceeded = true
 
+	// trigger gRPC call to payment service
+	if s.payClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		orderID, err := s.payClient.CreateOrder(ctx, booking.ID.String(), booking.TotalAmount, booking.Currency, userID)
+		if err != nil {
+			log.Printf("Payment RPC Failed: %v", err)
+			// we dont fail the booking, user can retry payment later
+		} else {
+			resp := mapBookingToDTO(booking)
+			resp.StripeClientSecret = orderID
+			return resp, nil
+		}
+	}
+
 	return mapBookingToDTO(booking), nil
 }
 
@@ -259,6 +285,32 @@ func (s *BookingService) GetBookingsByUserID(userID string) ([]dto.BookingRespon
 	return responses, nil
 }
 
+func (s *BookingService) InitiatePayment(id string, userID string) (string, error) {
+	booking, err := s.repo.GetBookingByID(id)
+	if err != nil {
+		return "", err
+	}
+
+	if booking.Status != "PENDING_PAYMENT" {
+		return "", errors.New("booking is not pending payment")
+	}
+
+	// trigger gRPC call to payment service to get client secret
+	if s.payClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		orderID, err := s.payClient.CreateOrder(ctx, booking.ID.String(), booking.TotalAmount, booking.Currency, userID)
+		if err != nil {
+			log.Printf("Payment RPC Failed: %v", err)
+			return "", errors.New("failed to initiate payment with stripe gateway")
+		}
+		return orderID, nil
+	}
+
+	return "", errors.New("payment service is currently unavailable")
+}
+
 func (s *BookingService) ConfirmBooking(id string) error {
 	booking, err := s.repo.GetBookingByID(id)
 	if err != nil {
@@ -338,4 +390,38 @@ func (s *BookingService) GetTicket(bookingID string) (*dto.TicketResponse, error
 		TicketNumber: t.TicketNumber,
 		QRCodeURL:    t.QRCodeURL,
 	}, nil
+}
+func (s *BookingService) ProcessPaymentEvent(evt kafka.PaymentCompletedEvent) {
+	booking, err := s.repo.GetBookingByID(evt.BookingID)
+	if err != nil {
+		log.Printf("[KAFKA ERROR] ProcessPaymentEvent: Booking not found %s", evt.BookingID)
+		return
+	}
+
+	if booking.Status != "PENDING_PAYMENT" {
+		log.Printf("[KAFKA INFO] ProcessPaymentEvent: Booking %s already in status %s. Skipping.", evt.BookingID, booking.Status)
+		return
+	}
+
+	// update to CONFIRMED
+	if err := s.ConfirmBooking(evt.BookingID); err != nil {
+		log.Printf("[KAFKA ERROR] ProcessPaymentEvent: Failed to confirm booking %s: %v", evt.BookingID, err)
+		return
+	}
+
+	// notify frontend via websocket
+	if s.wsManager != nil {
+		msg := map[string]interface{}{
+			"event": "BOOKING_CONFIRMED",
+			"payload": map[string]interface{}{
+				"booking_id": evt.BookingID,
+				"pnr":        booking.PNR,
+				"amount":     evt.Amount,
+				"currency":   evt.Currency,
+				"status":     "CONFIRMED",
+			},
+		}
+		_ = s.wsManager.SendToUser(booking.UserID.String(), msg)
+		log.Printf("[WS SUCCESS] Notified user %s of confirmed booking %s", booking.UserID.String(), evt.BookingID)
+	}
 }

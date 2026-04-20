@@ -46,6 +46,7 @@ type BookingResponse struct {
 	AncillariesTotal float64            `json:"ancillaries_total"`
 	TotalAmount      float64            `json:"total_amount"`
 	Currency         string             `json:"currency"`
+	StripeClientSecret string             `json:"stripe_client_secret,omitempty"`
 	BookedAt         string             `json:"booked_at"`
 	ExpiresAt        string             `json:"expires_at,omitempty"`
 }

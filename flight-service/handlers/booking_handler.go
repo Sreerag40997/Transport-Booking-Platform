@@ -75,12 +75,21 @@ func (h *BookingHandler) GetUserHistory(c fiber.Ctx) error {
 
 func (h *BookingHandler) ConfirmBooking(c fiber.Ctx) error {
 	id := c.Params("bookingId")
+	userIDVal := c.Locals("userID")
+	userIDStr := ""
+	if uid, ok := userIDVal.(uuid.UUID); ok {
+		userIDStr = uid.String()
+	}
 
-	if err := h.service.ConfirmBooking(id); err != nil {
+	secret, err := h.service.InitiatePayment(id, userIDStr)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"message": "booking confirmed successfully"})
+	return c.JSON(fiber.Map{
+		"message":               "payment initiated successfully",
+		"stripe_client_secret": secret,
+	})
 }
 
 func (h *BookingHandler) CancelBooking(c fiber.Ctx) error {

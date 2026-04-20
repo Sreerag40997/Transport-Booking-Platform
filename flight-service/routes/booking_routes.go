@@ -5,13 +5,15 @@ import (
 	"github.com/junaid9001/tripneo/flight-service/handlers"
 	"github.com/junaid9001/tripneo/flight-service/middlewares"
 	"github.com/junaid9001/tripneo/flight-service/repository"
+	"github.com/junaid9001/tripneo/flight-service/rpc"
 	"github.com/junaid9001/tripneo/flight-service/services"
+	"github.com/junaid9001/tripneo/flight-service/ws"
 	"gorm.io/gorm"
 )
 
-func SetupBookingRoutes(app *fiber.App, db *gorm.DB) {
+func SetupBookingRoutes(app *fiber.App, db *gorm.DB, payClient *rpc.PaymentClient, wsManager *ws.Manager) {
 	bookingRepo := repository.NewBookingRepository(db)
-	bookingService := services.NewBookingService(bookingRepo)
+	bookingService := services.NewBookingService(bookingRepo, payClient, wsManager)
 	bookingHandler := handlers.NewBookingHandler(bookingService)
 
 	api := app.Group("/api/flights/bookings")

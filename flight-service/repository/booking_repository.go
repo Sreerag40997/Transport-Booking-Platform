@@ -19,13 +19,13 @@ func (r *BookingRepository) CreateBooking(booking *models.Booking) error {
 
 func (r *BookingRepository) GetBookingByID(id string) (*models.Booking, error) {
 	var booking models.Booking
-	err := r.db.Preload("Passengers").Preload("Ancillaries").Preload("FlightInstance").Preload("FareType").First(&booking, "id = ?", id).Error
+	err := r.db.Preload("Passengers").Preload("Ancillaries").Preload("FlightInstance.Flight.OriginAirport").Preload("FlightInstance.Flight.DestinationAirport").Preload("FareType").First(&booking, "id = ?", id).Error
 	return &booking, err
 }
 
 func (r *BookingRepository) GetBookingByPNR(pnr string) (*models.Booking, error) {
 	var booking models.Booking
-	err := r.db.Preload("Passengers").Preload("Ancillaries").Preload("FlightInstance").Preload("FareType").First(&booking, "pnr = ?", pnr).Error
+	err := r.db.Preload("Passengers").Preload("Ancillaries").Preload("FlightInstance.Flight.OriginAirport").Preload("FlightInstance.Flight.DestinationAirport").Preload("FareType").First(&booking, "pnr = ?", pnr).Error
 	return &booking, err
 }
 
@@ -56,7 +56,7 @@ func (r *BookingRepository) CreateCancellation(cancellation *models.Cancellation
 			}
 		}
 
-		// Update availability counts
+		// update availability counts
 		if len(booking.Passengers) > 0 {
 			col := "available_economy"
 			quotaCol := "platform_quota_economy"
@@ -78,7 +78,7 @@ func (r *BookingRepository) CreateCancellation(cancellation *models.Cancellation
 
 func (r *BookingRepository) ConfirmBookingAndSeats(booking *models.Booking, ticket *models.ETicket) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Update booking status
+		// update booking status
 		if err := tx.Save(booking).Error; err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (r *BookingRepository) ConfirmBookingAndSeats(booking *models.Booking, tick
 			return err
 		}
 
-		// Deduct availability counts 
+		// deduct availability counts
 		if len(booking.Passengers) > 0 {
 			col := "available_economy"
 			quotaCol := "platform_quota_economy"
