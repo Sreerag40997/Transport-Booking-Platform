@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/contrib/v3/websocket"
 )
 
-// Manager keeps track of active WebSocket connections.
+// manager keeps track of active WebSocket connections.
 type Manager struct {
-	connections map[string]*websocket.Conn // UserID -> Conn
+	connections map[string]*websocket.Conn // userID -> conn
 	mu          sync.RWMutex
 }
 
@@ -28,7 +28,7 @@ func (m *Manager) RemoveConnection(userID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if conn, ok := m.connections[userID]; ok {
-		// Try to close nicely if not already closed
+
 		_ = conn.Close()
 		delete(m.connections, userID)
 		log.Printf("WS: User %s disconnected", userID)
@@ -41,7 +41,7 @@ func (m *Manager) SendToUser(userID string, message interface{}) error {
 	m.mu.RUnlock()
 
 	if !ok {
-		return nil // User is not currently connected
+		return nil // user is not currently connected
 	}
 
 	return conn.WriteJSON(message)

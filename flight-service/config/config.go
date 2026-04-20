@@ -7,24 +7,31 @@ import (
 )
 
 type Config struct {
-	APP_PORT         string
-	DB_URL           string
-	REDIS_URL        string
-	RUN_SEED_ON_BOOT string
+	APP_PORT                  string
+	DB_URL                    string
+	REDIS_URL                 string
+	RUN_SEED_ON_BOOT          string
+	PAYMENT_SERVICE_GRPC_URL  string
+	KAFKA_BROKERS             string
+	AVIATIONSTACK_API_KEY     string
 }
 
 func LoadConfig() *Config {
 	_ = godotenv.Load()
-	APP_PORT := os.Getenv("APP_PORT")
-	DB_URL := os.Getenv("DB_URL")
-	REDIS_URL := os.Getenv("REDIS_URL")
-	RUN_SEED_ON_BOOT := os.Getenv("RUN_SEED_ON_BOOT")
-
 	config := &Config{
-		APP_PORT:         APP_PORT,
-		DB_URL:           DB_URL,
-		REDIS_URL:        REDIS_URL,
-		RUN_SEED_ON_BOOT: RUN_SEED_ON_BOOT,
+		APP_PORT:                 os.Getenv("APP_PORT"),
+		DB_URL:                   os.Getenv("DB_URL"),
+		REDIS_URL:                os.Getenv("REDIS_URL"),
+		RUN_SEED_ON_BOOT:         os.Getenv("RUN_SEED_ON_BOOT"),
+		PAYMENT_SERVICE_GRPC_URL: os.Getenv("PAYMENT_SERVICE_GRPC_URL"),
+		KAFKA_BROKERS:            os.Getenv("KAFKA_BROKERS"),
+		AVIATIONSTACK_API_KEY:    os.Getenv("AVIATIONSTACK_API_KEY"),
+	}
+	if config.PAYMENT_SERVICE_GRPC_URL == "" {
+		config.PAYMENT_SERVICE_GRPC_URL = "localhost:50051"
+	}
+	if config.KAFKA_BROKERS == "" {
+		config.KAFKA_BROKERS = "localhost:9092"
 	}
 	return config
 }

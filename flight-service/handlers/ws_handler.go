@@ -8,7 +8,7 @@ import (
 	"github.com/junaid9001/tripneo/flight-service/ws"
 )
 
-// WebsocketUpgradeMiddleware checks if the request is a websocket upgrade
+// websocketupgrademiddleware checks if the request is a websocket upgrade
 func WebsocketUpgradeMiddleware(c fiber.Ctx) error {
 	if websocket.IsWebSocketUpgrade(c) {
 		c.Locals("allowed", true)
@@ -17,7 +17,7 @@ func WebsocketUpgradeMiddleware(c fiber.Ctx) error {
 	return fiber.ErrUpgradeRequired
 }
 
-// HandleWebSocket handles the actual websocket connection flow
+// handleWebSocket handles the actual websocket connection flow
 var HandleWebSocket = websocket.New(func(c *websocket.Conn) {
 	// e.g. /ws?userId=123
 	userID := c.Query("userId")
@@ -40,8 +40,7 @@ var HandleWebSocket = websocket.New(func(c *websocket.Conn) {
 			break
 		}
 		log.Printf("WS: recv from %s: %s (type: %d)", userID, msg, mt)
-		
-		// Optional: echo back or handle specific incoming messages
+
 	}
 
 	ws.DefaultManager.RemoveConnection(userID)
